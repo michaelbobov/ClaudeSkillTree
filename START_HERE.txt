@@ -1,0 +1,7 @@
+Read README.md, CLAUDE.md, and DESIGN_SYSTEM.md in this repository, then begin implementing SkillTree.
+
+I want a REAL, installable VS Code extension, not a website or design-only prototype. The extension must have a SkillTree Activity Bar/sidebar and a full interactive skill graph in an editor tab. It should read actual Claude Code SKILL.md files from project and global locations. Later, build a visual GitHub-powered marketplace that automatically refreshes its catalog and lets me preview and safely install skills to the current project or globally; then add opt-in skill usage tracking.
+
+Use the selected "Quiet Workbench" visual direction from DESIGN_SYSTEM.md: a clean, IDE-native developer tool with muted 1px borders, compact graph nodes and cards, native theme colors, no neon/glow, and no fake stats. Start with Phase 1 from README.md right now. Scaffold the project if needed, write code, run the build/tests, and use a test skill file to verify that it appears in the UI. Do not spend the first iteration on the landing website, marketing copy, fake data, or Git commit attribution.
+
+Implement through the phases without repeatedly asking me for permission, except for destructive operations, external publishing, or credentials. After each phase, tell me exactly how to test what you built in the VS Code Extension Development Host (F5).

@@ -1,0 +1,4 @@
+{
+  "$comment": "Test-only seed for the replayed fixture. example-owner/example-skills is fictional and never shown in the product UI.",
+  "repositories": ["example-owner/example-skills", "example-owner/missing-repo"]
+}

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "react-three-fiber": {
+      "source": "siddu1004/SFP",
+      "sourceType": "github",
+      "skillPath": "plugins/frontend/skills/react-three-fiber/SKILL.md",
+      "computedHash": "327671578b03dce040ef2cd243712db1b59d5a0f77811b4604fecbe5d4d11d9f"
+    }
+  }
+}

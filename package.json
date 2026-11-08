@@ -1,0 +1,422 @@
+{
+  "name": "skilltree",
+  "displayName": "SkillTree",
+  "description": "See, organize and open your Claude Code skills as a compact, IDE-native graph.",
+  "version": "0.1.0",
+  "publisher": "skilltree-local",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "claude",
+    "claude code",
+    "skills",
+    "SKILL.md"
+  ],
+  "main": "./dist/extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In untrusted workspaces SkillTree only reads skill files. Creating skills is disabled."
+    },
+    "virtualWorkspaces": false
+  },
+  "activationEvents": [
+    "onWebviewPanel:skilltree.graph",
+    "onWebviewPanel:skilltree.marketplace",
+    "onWebviewPanel:skilltree.activity",
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "skilltree",
+          "title": "SkillTree",
+          "icon": "media/skilltree.svg"
+        }
+      ]
+    },
+    "views": {
+      "skilltree": [
+        {
+          "id": "skilltree.skills",
+          "name": "Skills",
+          "icon": "media/skilltree.svg",
+          "contextualTitle": "SkillTree"
+        }
+      ]
+    },
+    "viewsWelcome": [],
+    "commands": [
+      {
+        "command": "skilltree.openGraph",
+        "title": "Open Skill Tree",
+        "category": "SkillTree",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "skilltree.refresh",
+        "title": "Rescan Skills",
+        "category": "SkillTree",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "skilltree.createProjectSkill",
+        "title": "Create Project Skill…",
+        "category": "SkillTree",
+        "icon": "$(add)"
+      },
+      {
+        "command": "skilltree.openSkillFile",
+        "title": "Open SKILL.md",
+        "category": "SkillTree",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "skilltree.showInGraph",
+        "title": "Show in Skill Tree",
+        "category": "SkillTree",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "skilltree.setCategory",
+        "title": "Set Category…",
+        "category": "SkillTree"
+      },
+      {
+        "command": "skilltree.copyPath",
+        "title": "Copy Path",
+        "category": "SkillTree"
+      },
+      {
+        "command": "skilltree.revealInOS",
+        "title": "Reveal in File Explorer",
+        "category": "SkillTree"
+      },
+      {
+        "command": "skilltree.openMarketplace",
+        "title": "Open Marketplace",
+        "category": "SkillTree",
+        "icon": "$(extensions)"
+      },
+      {
+        "command": "skilltree.refreshCatalog",
+        "title": "Refresh Marketplace Catalog",
+        "category": "SkillTree",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "skilltree.installEntry",
+        "title": "Install Catalog Skill",
+        "category": "SkillTree"
+      },
+      {
+        "command": "skilltree.enableTracking",
+        "title": "Enable Activity Tracking…",
+        "category": "SkillTree",
+        "icon": "$(record)"
+      },
+      {
+        "command": "skilltree.disableTracking",
+        "title": "Disable Activity Tracking",
+        "category": "SkillTree",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "skilltree.openActivity",
+        "title": "Open Activity",
+        "category": "SkillTree",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "skilltree.enableClaudeRecommendations",
+        "title": "Let Claude Suggest Skills…",
+        "category": "SkillTree",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "skilltree.disableClaudeRecommendations",
+        "title": "Stop Claude Skill Recommendations",
+        "category": "SkillTree"
+      },
+      {
+        "command": "skilltree.menu",
+        "title": "Show Menu",
+        "category": "SkillTree",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "skilltree.openWalkthrough",
+        "title": "Get Started",
+        "category": "SkillTree"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "skilltree.openGraph",
+          "when": "view == skilltree.skills",
+          "group": "navigation@1"
+        },
+        {
+          "command": "skilltree.openMarketplace",
+          "when": "view == skilltree.skills",
+          "group": "navigation@2"
+        },
+        {
+          "command": "skilltree.openActivity",
+          "when": "view == skilltree.skills",
+          "group": "navigation@3"
+        },
+        {
+          "command": "skilltree.refresh",
+          "when": "view == skilltree.skills",
+          "group": "navigation@4"
+        },
+        {
+          "command": "skilltree.createProjectSkill",
+          "when": "view == skilltree.skills && isWorkspaceTrusted && workspaceFolderCount > 0",
+          "group": "1_create@1"
+        },
+        {
+          "command": "skilltree.enableTracking",
+          "when": "view == skilltree.skills && !skilltree.trackingEnabled",
+          "group": "2_settings@1"
+        },
+        {
+          "command": "skilltree.disableTracking",
+          "when": "view == skilltree.skills && skilltree.trackingEnabled",
+          "group": "2_settings@1"
+        },
+        {
+          "command": "skilltree.enableClaudeRecommendations",
+          "when": "view == skilltree.skills && !skilltree.claudeRecommendations",
+          "group": "2_settings@2"
+        },
+        {
+          "command": "skilltree.disableClaudeRecommendations",
+          "when": "view == skilltree.skills && skilltree.claudeRecommendations",
+          "group": "2_settings@2"
+        },
+        {
+          "command": "skilltree.refreshCatalog",
+          "when": "view == skilltree.skills",
+          "group": "3_catalog@1"
+        },
+        {
+          "command": "skilltree.openWalkthrough",
+          "when": "view == skilltree.skills",
+          "group": "4_help@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "skilltree.showInGraph",
+          "when": "view == skilltree.skills && viewItem =~ /^skill/",
+          "group": "inline"
+        },
+        {
+          "command": "skilltree.openSkillFile",
+          "when": "view == skilltree.skills && viewItem =~ /^skill/",
+          "group": "1_open@1"
+        },
+        {
+          "command": "skilltree.showInGraph",
+          "when": "view == skilltree.skills && viewItem =~ /^skill/",
+          "group": "1_open@2"
+        },
+        {
+          "command": "skilltree.revealInOS",
+          "when": "view == skilltree.skills && viewItem =~ /^skill/",
+          "group": "1_open@3"
+        },
+        {
+          "command": "skilltree.setCategory",
+          "when": "view == skilltree.skills && viewItem =~ /^skill/",
+          "group": "2_organize@1"
+        },
+        {
+          "command": "skilltree.copyPath",
+          "when": "view == skilltree.skills && viewItem =~ /^skill/",
+          "group": "3_copy@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "skilltree.openSkillFile",
+          "when": "false"
+        },
+        {
+          "command": "skilltree.showInGraph",
+          "when": "false"
+        },
+        {
+          "command": "skilltree.setCategory",
+          "when": "false"
+        },
+        {
+          "command": "skilltree.copyPath",
+          "when": "false"
+        },
+        {
+          "command": "skilltree.revealInOS",
+          "when": "false"
+        },
+        {
+          "command": "skilltree.createProjectSkill",
+          "when": "isWorkspaceTrusted && workspaceFolderCount > 0"
+        },
+        {
+          "command": "skilltree.installEntry",
+          "when": "false"
+        },
+        {
+          "command": "skilltree.enableTracking",
+          "when": "!skilltree.trackingEnabled"
+        },
+        {
+          "command": "skilltree.disableTracking",
+          "when": "skilltree.trackingEnabled"
+        },
+        {
+          "command": "skilltree.enableClaudeRecommendations",
+          "when": "!skilltree.claudeRecommendations"
+        },
+        {
+          "command": "skilltree.disableClaudeRecommendations",
+          "when": "skilltree.claudeRecommendations"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "SkillTree",
+      "properties": {
+        "skilltree.catalogUrl": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "HTTPS URL of a SkillTree `catalog.json` (for example the GitHub Pages output of `.github/workflows/index-skills.yml`). Leave empty to use the catalog snapshot bundled with the extension. The last good copy is cached for offline use.",
+          "scope": "application"
+        },
+        "skilltree.statusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show SkillTree in the status bar: your skill count, or the last skill Claude Code used while usage tracking is on. Click it for the SkillTree menu."
+        }
+      }
+    },
+    "walkthroughs": [
+      {
+        "id": "getStarted",
+        "title": "Get started with SkillTree",
+        "description": "See every Claude Code skill you have, find new ones, and learn which ones Claude actually uses.",
+        "steps": [
+          {
+            "id": "openTree",
+            "title": "See all your skills",
+            "description": "One map of every skill on this machine, grouped by category.\n[Open the Skill Tree](command:skilltree.openGraph)",
+            "media": {
+              "markdown": "media/walkthrough/tree.md"
+            },
+            "completionEvents": [
+              "onCommand:skilltree.openGraph"
+            ]
+          },
+          {
+            "id": "marketplace",
+            "title": "Find skills on GitHub",
+            "description": "Browse public skills, preview every file, and install with one confirmation.\n[Open the Marketplace](command:skilltree.openMarketplace)",
+            "media": {
+              "markdown": "media/walkthrough/marketplace.md"
+            },
+            "completionEvents": [
+              "onCommand:skilltree.openMarketplace"
+            ]
+          },
+          {
+            "id": "tracking",
+            "title": "See which skills Claude uses",
+            "description": "Opt in to record skill use on this machine. No prompts are recorded.\n[Turn on usage tracking](command:skilltree.enableTracking)",
+            "media": {
+              "markdown": "media/walkthrough/tracking.md"
+            },
+            "completionEvents": [
+              "onContext:skilltree.trackingEnabled"
+            ]
+          },
+          {
+            "id": "claude",
+            "title": "Let Claude suggest skills",
+            "description": "Get a suggestion when a skill you don't have fits your request. You approve every install.\n[Let Claude suggest skills](command:skilltree.enableClaudeRecommendations)",
+            "media": {
+              "markdown": "media/walkthrough/claude.md"
+            },
+            "completionEvents": [
+              "onContext:skilltree.claudeRecommendations"
+            ]
+          },
+          {
+            "id": "menu",
+            "title": "Open SkillTree from anywhere",
+            "description": "SkillTree is in the status bar, even when the sidebar is closed.\n[Show the SkillTree menu](command:skilltree.menu)",
+            "media": {
+              "markdown": "media/walkthrough/menu.md"
+            },
+            "completionEvents": [
+              "onCommand:skilltree.menu"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "build": "npm run typecheck && npm run build:ext && npm run build:webview",
+    "dev": "node scripts/dev.mjs",
+    "build:ext": "node scripts/build-extension.mjs",
+    "build:webview": "vite build --config webview/vite.config.mts",
+    "watch:ext": "node scripts/build-extension.mjs --watch",
+    "watch:webview": "vite build --config webview/vite.config.mts --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p webview/tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:integration": "npm run build && node scripts/build-extension.mjs --tests && vscode-test",
+    "package": "vsce package --no-dependencies --allow-missing-repository --skip-license --readme-path docs/EXTENSION_README.md",
+    "vscode:prepublish": "npm run build",
+    "verify": "node scripts/verify.mjs",
+    "verify:quick": "node scripts/verify.mjs --quick",
+    "preview": "node scripts/preview/preview.mjs",
+    "index": "node scripts/run-ts.mjs scripts/index-skills.ts",
+    "index:live": "node scripts/run-ts.mjs scripts/index-skills.ts --live",
+    "e2e:live": "node scripts/run-ts.mjs scripts/e2e-live.ts",
+    "e2e:vscode": "npm run build && node scripts/build-extension.mjs --tests && vscode-test --config .vscode-test.live.mjs",
+    "validate:catalog": "node scripts/run-ts.mjs scripts/validate-catalog.ts data/catalog.json"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@types/vscode": "~1.95.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "@vscode/codicons": "^0.0.46-24",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.1.0",
+    "@xyflow/react": "^12.12.1",
+    "esbuild": "^0.28.2",
+    "markdown-it": "^15.0.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0",
+    "yaml": "^2.9.1"
+  }
+}

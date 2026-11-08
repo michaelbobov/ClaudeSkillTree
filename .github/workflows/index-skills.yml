@@ -1,0 +1,56 @@
+# Rebuilds the SkillTree marketplace catalog from public GitHub repositories and publishes it as a
+# static, versioned JSON file on GitHub Pages. Nothing downloaded is executed: the indexer only
+# reads repository metadata and SKILL.md text.
+#
+# After pushing this repository, enable Pages (Settings → Pages → Source: GitHub Actions), then set
+# the extension setting `skilltree.catalogUrl` to https://<owner>.github.io/<repo>/catalog-v1.json
+name: Index skills
+
+on:
+  schedule:
+    - cron: '17 6 * * *' # daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: index-skills
+  cancel-in-progress: false
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Build catalog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run index:live -- --search --out site/catalog-v1.json
+      - name: Validate catalog
+        run: node scripts/run-ts.mjs scripts/validate-catalog.ts site/catalog-v1.json
+      - name: Prepare site
+        run: |
+          cp site/catalog-v1.json site/catalog.json
+          printf '<!doctype html><title>SkillTree catalog</title><p>Machine-readable catalog: <a href="catalog-v1.json">catalog-v1.json</a></p>\n' > site/index.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: index
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

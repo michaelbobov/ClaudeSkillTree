@@ -1,0 +1,9 @@
+node_modules/
+dist/
+out/
+.vscode-test/
+*.vsix
+.DS_Store
+
+# Claude Code personal settings (SkillTree project-scope tracking writes local paths here)
+.claude/settings.local.json

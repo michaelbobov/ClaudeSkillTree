@@ -1,0 +1,131 @@
+{
+ "https://api.github.com/repos/example-owner/example-skills": {
+  "status": 200,
+  "body": {
+   "full_name": "example-owner/example-skills",
+   "default_branch": "main",
+   "private": false,
+   "archived": false,
+   "license": {
+    "spdx_id": "Apache-2.0"
+   }
+  }
+ },
+ "https://api.github.com/repos/example-owner/example-skills/commits/main": {
+  "status": 200,
+  "body": {
+   "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "commit": {
+    "committer": {
+     "date": "2025-12-31T12:00:00Z"
+    },
+    "tree": {
+     "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+   }
+  }
+ },
+ "https://api.github.com/repos/example-owner/example-skills/git/trees/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb?recursive=1": {
+  "status": 200,
+  "body": {
+   "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "truncated": false,
+   "tree": [
+    {
+     "path": "skills",
+     "mode": "040000",
+     "type": "tree",
+     "sha": "cccccccccccccccccccccccccccccccccccccccc"
+    },
+    {
+     "path": "skills/good-skill",
+     "mode": "040000",
+     "type": "tree",
+     "sha": "dddddddddddddddddddddddddddddddddddddddd"
+    },
+    {
+     "path": "skills/good-skill/SKILL.md",
+     "mode": "100644",
+     "type": "blob",
+     "sha": "587361658155d94c227176a637a34cfed4b42adc",
+     "size": 176
+    },
+    {
+     "path": "skills/good-skill/reference.md",
+     "mode": "100644",
+     "type": "blob",
+     "sha": "cf5aa0741655527ad33df71941044c0a8d60fc60",
+     "size": 12
+    },
+    {
+     "path": "skills/good-skill/scripts/run.sh",
+     "mode": "100755",
+     "type": "blob",
+     "sha": "7e182fdda8054cba6cb90192bf51465c41d45148",
+     "size": 20
+    },
+    {
+     "path": "skills/good-skill/link",
+     "mode": "120000",
+     "type": "blob",
+     "sha": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+     "size": 10
+    },
+    {
+     "path": "skills/plugin-part/SKILL.md",
+     "mode": "100644",
+     "type": "blob",
+     "sha": "54430d0ed2e917004cad995d82dfa34a7a0d9c7b",
+     "size": 62
+    },
+    {
+     "path": "skills/plugin-part/.claude-plugin/plugin.json",
+     "mode": "100644",
+     "type": "blob",
+     "sha": "ffffffffffffffffffffffffffffffffffffffff",
+     "size": 20
+    },
+    {
+     "path": "skills/no-frontmatter/SKILL.md",
+     "mode": "100644",
+     "type": "blob",
+     "sha": "f4a1598df05c7184aca3e8672cd60ed512142e32",
+     "size": 34
+    },
+    {
+     "path": "skills/too-big/SKILL.md",
+     "mode": "100644",
+     "type": "blob",
+     "sha": "806a43453e1f84379a9a2c4bebace7a7520f3e63",
+     "size": 52
+    },
+    {
+     "path": "skills/too-big/data.bin",
+     "mode": "100644",
+     "type": "blob",
+     "sha": "1111111111111111111111111111111111111111",
+     "size": 5242880
+    },
+    {
+     "path": "README.md",
+     "mode": "100644",
+     "type": "blob",
+     "sha": "2222222222222222222222222222222222222222",
+     "size": 100
+    }
+   ]
+  }
+ },
+ "https://raw.githubusercontent.com/example-owner/example-skills/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/skills/good-skill/SKILL.md": {
+  "status": 200,
+  "body": "---\nname: good-skill\ndescription: Write unit tests with vitest for TypeScript projects.\nlicense: MIT\nallowed-tools: Read Grep\n---\n\n# Good skill\n\nSee [reference](reference.md).\n"
+ },
+ "https://raw.githubusercontent.com/example-owner/example-skills/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/skills/plugin-part/SKILL.md": {
+  "status": 200,
+  "body": "---\nname: plugin-part\ndescription: Part of a plugin.\n---\nBody\n"
+ },
+ "https://raw.githubusercontent.com/example-owner/example-skills/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/skills/no-frontmatter/SKILL.md": {
+  "status": 200,
+  "body": "Instructions without frontmatter.\n"
+ }
+}

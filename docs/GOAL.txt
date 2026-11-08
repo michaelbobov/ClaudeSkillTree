@@ -1,0 +1,13 @@
+/goal Autopilot SkillTree Phases 2 and 3 (README.md) to completion with no user input. At the start of every turn read docs/AUTOPILOT.md and docs/PROGRESS.md and follow the per-turn protocol; CLAUDE.md and DESIGN_SYSTEM.md rules apply. Prove everything with command output in this conversation. Never ask me to verify, test, or choose. If a step is blocked (permission denied, rate limit, missing tool), try a reasonable alternative, otherwise log it under "Needs user" in PROGRESS.md and move to the next item.
+
+DONE when the final turn, after the last code change, shows all of:
+1. `npm run verify` output ending in "VERIFY PASS", with 0 failing unit and integration tests, a .vsix, and preview screenshots.
+2. Passing integration tests in that output include: "marketplace renders the catalog with provenance", "installs a catalog skill into a sandbox project and shows it as installed", "refuses to overwrite an existing skill without confirmation", "falls back to the cached catalog when offline", "records hook event fixtures and shows them in Activity", "enabling and disabling tracking edits only the sandbox settings and restores the backup".
+3. `npm run index:live` output showing data/catalog.json has at least 1 real entry with a 40-hex commitSha and a sourceUrl pinned to that commit (print one entry).
+4. `npm run e2e:live` output showing that real entry was previewed, installed at its pinned commit into a temp sandbox project, rescanned, and listed as Installed; plus, if the Claude Code binary is found, a real sandbox `claude -p` session invoking a skill recorded an Activity event with its capture source (print the event JSON), or the printed reason it was skipped.
+5. You Read the newest out/preview screenshots of Skill Tree, Marketplace and Activity in dark, light, high-contrast and narrow, and state that no DESIGN_SYSTEM.md violations remain.
+6. Printed README Phase 2 and Phase 3 checkboxes are all [x], and PROGRESS.md ends with a summary of what was built and how to test it with F5.
+
+OR STOP once 3 hours have passed since the Start time in docs/PROGRESS.md: finish the current item, run `npm run verify`, and write a PROGRESS.md handoff listing what remains. Print elapsed time every turn.
+
+Hard constraints (breaking any means not done): never modify the real ~/.claude/settings*.json, ~/.claude/skills, or anything outside this repo and OS temp dirs; never push, publish, open PRs, create repos or GitHub Pages, or enter credentials; never execute downloaded skill content; no invented catalog entries, repos, ratings, counts or licenses; tracking stays opt-in and stores no prompt text; Phase 1 tests keep passing; never delete or weaken tests to make them pass; no local servers.

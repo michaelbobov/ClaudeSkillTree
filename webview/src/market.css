@@ -1,0 +1,440 @@
+/* Marketplace — same Quiet Workbench tokens as the Skill Tree. Dense list, 1px borders, no shadows. */
+
+.market .workspace {
+  min-height: 0;
+}
+
+.mcanvas {
+  overflow: auto;
+}
+
+.muted {
+  color: var(--st-muted);
+}
+
+.mbanner {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--st-border);
+  font-size: 12px;
+}
+
+.mbanner-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  line-height: 1.45;
+}
+
+.mbanner-line .codicon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--st-muted);
+}
+
+.mbanner-line.is-warning,
+.mbanner-line.is-warning .codicon {
+  color: var(--st-warning);
+}
+
+.mlist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 6px;
+  padding: 10px 12px 16px;
+  align-content: start;
+}
+
+.app.is-narrow .mlist {
+  grid-template-columns: 1fr;
+}
+
+.mcard {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 8px 10px 7px;
+  border: 1px solid var(--st-node-border);
+  border-radius: var(--st-radius);
+  background: var(--st-surface);
+  cursor: pointer;
+  transition: border-color 80ms linear, background-color 80ms linear;
+}
+
+.mcard:hover {
+  background: var(--st-hover);
+}
+
+.mcard.is-selected {
+  border-color: var(--st-focus);
+  background: var(--st-selected-bg);
+}
+
+.mcard:focus-visible {
+  outline: 1px solid var(--st-focus);
+  outline-offset: 1px;
+}
+
+.mcard-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.mcard-name {
+  flex: 0 0 auto;
+  max-width: 72%;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* owner/repo sits next to the name, quieter: provenance at a glance without its own row. */
+.mcard-repo {
+  flex: 0 1 auto;
+  min-width: 40px;
+  color: var(--st-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Repository stars: a quiet fact next to provenance, never a rating of the skill. */
+.mstars {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--st-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mstars .codicon {
+  font-size: 11px !important;
+}
+
+.mcard-path {
+  font-family: var(--st-mono);
+  font-size: 10.5px;
+}
+
+.mcard-desc {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--st-fg);
+  opacity: 0.88;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(12px * 1.45 * 2);
+}
+
+.mcard-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  gap: 10px;
+  min-height: 22px;
+  font-size: 11px;
+  color: var(--st-muted);
+}
+
+.mmeta-item {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mmeta-license {
+  flex: 0 1 auto;
+  display: block;
+  max-width: 180px;
+}
+
+.mwarn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--st-warning);
+}
+
+.mwarn .codicon {
+  font-size: 12px;
+}
+
+.mmeta-item .codicon {
+  font-size: 12px;
+}
+
+/* Install buttons appear on hover, keyboard focus or selection; the preview pane always has them. */
+.mcard-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 4px;
+  visibility: hidden;
+}
+
+.mcard:hover .mcard-actions,
+.mcard:focus-within .mcard-actions,
+.mcard.is-selected .mcard-actions {
+  visibility: visible;
+}
+
+.mcard-spacer {
+  flex: 1 1 auto;
+}
+
+.mmore {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 4px;
+}
+
+.mrepo-select {
+  max-width: 260px;
+}
+
+.btn-sm {
+  height: 22px;
+  padding: 0 7px;
+  font-size: 12px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mbadge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 5px;
+  height: 16px;
+  border: 1px solid var(--st-border);
+  border-radius: 3px;
+  font-size: 10px;
+  color: var(--st-muted);
+  white-space: nowrap;
+}
+
+.mbadge .codicon {
+  font-size: 11px;
+}
+
+.mbadge.is-installed {
+  color: var(--st-fg);
+  border-color: var(--vscode-charts-green, #89d185);
+}
+
+.mbadge.is-installed .codicon {
+  color: var(--vscode-charts-green, #89d185);
+}
+
+.mbadge.is-update-available {
+  color: var(--st-fg);
+  border-color: var(--st-focus);
+}
+
+.mbadge.is-unknown {
+  border-style: dashed;
+}
+
+.mnote {
+  font-size: 11px;
+  color: var(--st-muted);
+}
+
+.mpreview {
+  flex-basis: 440px;
+  width: 440px;
+}
+
+.mpreview.is-drawer {
+  width: min(440px, 100%);
+}
+
+.mfacts .insp-field {
+  grid-template-columns: 120px minmax(0, 1fr);
+}
+
+.mfacts dt {
+  font-family: var(--st-font);
+}
+
+.mfacts {
+  margin-top: 10px;
+}
+
+.mfront {
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  max-height: 180px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 11px;
+  border: 1px solid var(--st-border);
+  border-radius: var(--st-radius);
+  background: var(--vscode-textCodeBlock-background, rgba(255, 255, 255, 0.04));
+}
+
+.insp-files li.is-excluded {
+  color: var(--st-muted);
+  text-decoration: line-through;
+}
+
+/* ---- Activity timeline ------------------------------------------------------------------- */
+
+.timeline {
+  padding: 8px 12px 16px;
+}
+
+.tl-session {
+  margin-bottom: 10px;
+  border: 1px solid var(--st-node-border);
+  border-radius: var(--st-radius);
+  background: var(--st-surface);
+}
+
+.tl-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--st-border);
+  font-size: 12px;
+}
+
+.tl-project {
+  font-weight: 600;
+}
+
+.tl-sid,
+.tl-range,
+.tl-count {
+  color: var(--st-muted);
+  font-size: 11px;
+}
+
+.tl-count {
+  margin-left: auto;
+}
+
+.tl-rows {
+  list-style: none;
+  margin: 0;
+  padding: 2px 0;
+}
+
+.tl-row {
+  display: grid;
+  grid-template-columns: 76px minmax(120px, 220px) 190px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.tl-row:hover {
+  background: var(--st-hover);
+}
+
+.tl-row > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tl-time,
+.tl-cwd {
+  color: var(--st-muted);
+  font-size: 11px;
+}
+
+.tl-source {
+  color: var(--st-muted);
+  font-size: 11px;
+}
+
+.tl-source .codicon {
+  font-size: 12px;
+  vertical-align: -2px;
+}
+
+.app.activity .state-sub {
+  max-width: 560px;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .tl-row {
+    grid-template-columns: 88px minmax(0, 1fr) 20px;
+  }
+  .tl-cwd,
+  .tl-source-label {
+    display: none;
+  }
+}
+
+/* "For you": suggestions from recorded use, each with its reason. */
+.mgroup {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 2px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--st-fg);
+}
+
+.mgroup .muted {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.mreason {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--st-fg);
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mreason .codicon {
+  font-size: 11px !important;
+}

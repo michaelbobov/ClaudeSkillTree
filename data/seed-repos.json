@@ -1,0 +1,19 @@
+{
+  "$comment": "Curated public repositories indexed by scripts/index-skills.ts (each verified via the GitHub API before adding), plus GitHub topic searches ranked by stars (popular) and the same searches limited to repositories created in the last newWithinDays days (new). Searches run with --search (the scheduled workflow, which has a GITHUB_TOKEN).",
+  "repositories": [
+    "anthropics/skills",
+    "emilkowalski/skills",
+    "pbakaus/impeccable",
+    "mattpocock/skills",
+    "vercel-labs/agent-skills"
+  ],
+  "searchQueries": [
+    "topic:claude-skills",
+    "topic:claude-code-skills",
+    "topic:agent-skills",
+    "topic:claude-skill"
+  ],
+  "maxSearchRepositories": 60,
+  "newWithinDays": 30,
+  "maxNewRepositories": 20
+}

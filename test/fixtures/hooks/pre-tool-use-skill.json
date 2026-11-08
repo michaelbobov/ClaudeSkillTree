@@ -1,0 +1,10 @@
+{
+  "session_id": "abc123",
+  "transcript_path": "/Users/.../00893aaf.jsonl",
+  "cwd": "/Users/...",
+  "permission_mode": "default",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Skill",
+  "tool_input": { "skill": "frontend-design", "args": "make the header calmer" },
+  "tool_use_id": "toolu_01ABC"
+}

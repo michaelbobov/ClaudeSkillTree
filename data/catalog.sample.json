@@ -1,0 +1,778 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-07T20:16:59.429Z",
+  "source": "sample",
+  "generator": "skilltree scripts/index-skills.ts",
+  "repositories": [
+    "anthropics/skills"
+  ],
+  "entries": [
+    {
+      "id": "anthropics/skills:skills/academy-guide",
+      "name": "academy-guide",
+      "description": "Stop and check this skill before finishing any reply to a question about how to use Claude or a Claude product — it recommends matching courses, tutorials, and use cases from Claude Academy (academy.claude.com), Anthropic's learning hub. Trigger on: \"how do I\", \"how can I\", \"getting started with\", \"what can Claude do\", \"teach me\", \"learn to use\"; questions about artifacts, projects, skills, plugins, connectors, MCP; requests about rolling Claude out to a team, class, or organization; and any ask for training materials, onboarding content, or learning resources. Use it when the user is learning how to use a feature or product — not when they are mid-task and just want the task done. This skill composes with other skills: after consulting product documentation to answer how a Claude feature works, also check here for a matching course or tutorial — a docs-grounded answer and an Academy recommendation belong together. Only recommend on a strong match; never invent Academy content.",
+      "category": "Other",
+      "categorySource": "default",
+      "owner": "anthropics",
+      "repo": "skills",
+      "path": "skills/academy-guide",
+      "sourceUrl": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/academy-guide",
+      "commitSha": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "license": "Complete terms in LICENSE.txt",
+      "licenseSource": "frontmatter",
+      "updatedAt": "2026-11-06T22:32:28Z",
+      "indexedAt": "2026-11-07T20:16:55.933Z",
+      "kind": "skill",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "size": 7755,
+          "sha": "cefeaeb20cc29a803af0335d7c7155b066d8770f",
+          "kind": "markdown"
+        },
+        {
+          "path": "LICENSE.txt",
+          "size": 11345,
+          "sha": "4f881c52d1f72f4cfb720e339e2d35c3058d01a9",
+          "kind": "markdown"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "anthropics/skills:skills/algorithmic-art",
+      "name": "algorithmic-art",
+      "description": "Creating algorithmic art using p5.js with seeded randomness and interactive parameter exploration. Use this when users request creating art using code, generative art, algorithmic art, flow fields, or particle systems. Create original algorithmic art rather than copying existing artists' work to avoid copyright violations.",
+      "category": "Other",
+      "categorySource": "default",
+      "owner": "anthropics",
+      "repo": "skills",
+      "path": "skills/algorithmic-art",
+      "sourceUrl": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/algorithmic-art",
+      "commitSha": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "license": "Complete terms in LICENSE.txt",
+      "licenseSource": "frontmatter",
+      "updatedAt": "2026-11-06T22:32:28Z",
+      "indexedAt": "2026-11-07T20:16:55.933Z",
+      "kind": "skill",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "size": 19769,
+          "sha": "634f6fa42e4e697fa6afd293acd7fb8246574876",
+          "kind": "markdown"
+        },
+        {
+          "path": "LICENSE.txt",
+          "size": 11345,
+          "sha": "4f881c52d1f72f4cfb720e339e2d35c3058d01a9",
+          "kind": "markdown"
+        },
+        {
+          "path": "templates/generator_template.js",
+          "size": 7826,
+          "sha": "e263fbde985cd4b84b28e6a8eaf07fca3fcd3557",
+          "kind": "script"
+        },
+        {
+          "path": "templates/viewer.html",
+          "size": 20844,
+          "sha": "630cc1f62df51deac69b3246b2dfeb1e68dae024",
+          "kind": "other"
+        }
+      ],
+      "warnings": [
+        "Contains 1 script file that Claude may run when the skill is used."
+      ]
+    },
+    {
+      "id": "anthropics/skills:skills/brand-guidelines",
+      "name": "brand-guidelines",
+      "description": "Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand colors or style guidelines, visual formatting, or company design standards apply.",
+      "category": "Design",
+      "categorySource": "inferred",
+      "owner": "anthropics",
+      "repo": "skills",
+      "path": "skills/brand-guidelines",
+      "sourceUrl": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/brand-guidelines",
+      "commitSha": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "license": "Complete terms in LICENSE.txt",
+      "licenseSource": "frontmatter",
+      "updatedAt": "2026-11-06T22:32:28Z",
+      "indexedAt": "2026-11-07T20:16:55.933Z",
+      "kind": "skill",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "size": 2235,
+          "sha": "47c72c607bdb5dd81bdea5de2b5e4f3992a5fd59",
+          "kind": "markdown"
+        },
+        {
+          "path": "LICENSE.txt",
+          "size": 11345,
+          "sha": "4f881c52d1f72f4cfb720e339e2d35c3058d01a9",
+          "kind": "markdown"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "anthropics/skills:skills/claude-api",
+      "name": "claude-api",
+      "description": "Reference for the Claude API / Anthropic SDK — model ids, pricing, params, streaming, tool use, MCP, agents, caching, token counting, model migration.\nTRIGGER — read BEFORE opening the target file; don't skip because it \"looks like a one-liner\" — whenever: the prompt names Claude/Anthropic in any form (Claude, Anthropic, Fable, Opus, Sonnet, Haiku, `anthropic`, `@anthropic-ai`, `claude-*`, `us.anthropic.*`, `[1m]`); the user asks about an LLM (pricing/model choice/limits/caching) — never answer from memory; OR the task is LLM-shaped with provider unstated (agent/MCP/tool-definition/multi-agent/RAG/LLM-judge/computer-use; generate/summarize/extract/classify/rewrite/converse over NL; debugging refusals/cutoffs/streaming/tool-calls/tokens).\nSKIP only when another provider is being worked on (overrides all triggers): OpenAI/GPT/Gemini/Llama/Mistral/Cohere/Ollama named in the query; OR `grep -rE 'openai|langchain_openai|google.generativeai|genai|mistralai|cohere|ollama'` over the project hits (run this grep FIRST if no provider named — don't Read the file).",
+      "category": "Backend",
+      "categorySource": "inferred",
+      "owner": "anthropics",
+      "repo": "skills",
+      "path": "skills/claude-api",
+      "sourceUrl": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/claude-api",
+      "commitSha": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "license": "Complete terms in LICENSE.txt",
+      "licenseSource": "frontmatter",
+      "updatedAt": "2026-11-06T22:32:28Z",
+      "indexedAt": "2026-11-07T20:16:55.933Z",
+      "kind": "skill",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "size": 105146,
+          "sha": "fe7e28a55c713933ff98e017112e53c61d8f5537",
+          "kind": "markdown"
+        },
+        {
+          "path": "csharp/claude-api/batches.md",
+          "size": 413,
+          "sha": "629f983660dc4681c10643f438699c868782fcca",
+          "kind": "markdown"
+        },
+        {
+          "path": "csharp/claude-api/files-api.md",
+          "size": 900,
+          "sha": "46f85ca24528c5605d95c6a39bc44aafab1d58e5",
+          "kind": "markdown"
+        },
+        {
+          "path": "csharp/claude-api/README.md",
+          "size": 18933,
+          "sha": "0fabfd79307e61df690faf01d3b076f4cae665d8",
+          "kind": "markdown"
+        },
+        {
+          "path": "csharp/claude-api/streaming.md",
+          "size": 787,
+          "sha": "5d0b5ad0a4e2c682298c86d3f811e16b115d1624",
+          "kind": "markdown"
+        },
+        {
+          "path": "csharp/claude-api/tool-use.md",
+          "size": 7623,
+          "sha": "6fc31f1338c84105d6329dadbcbd2b7d455c308b",
+          "kind": "markdown"
+        },
+        {
+          "path": "curl/examples.md",
+          "size": 9714,
+          "sha": "78b19edc1cc37a43e7f163cfbe63f7bec8b32865",
+          "kind": "markdown"
+        },
+        {
+          "path": "curl/managed-agents.md",
+          "size": 10788,
+          "sha": "3c64df0d89af4802f81452f34ebb9bc0bc5f299f",
+          "kind": "markdown"
+        },
+        {
+          "path": "go/claude-api/files-api.md",
+          "size": 936,
+          "sha": "b62f163fcf38c823812ec4181ad2ee75e0c3c2e7",
+          "kind": "markdown"
+        },
+        {
+          "path": "go/claude-api/README.md",
+          "size": 8477,
+          "sha": "5bfd6895aed807303c3edc77b9c97929025b2cf7",
+          "kind": "markdown"
+        },
+        {
+          "path": "go/claude-api/streaming.md",
+          "size": 1026,
+          "sha": "7b5eb9ee273db754b27d55ed2f403bef6b14f252",
+          "kind": "markdown"
+        },
+        {
+          "path": "go/claude-api/tool-use.md",
+          "size": 10018,
+          "sha": "e66b1795c13755b4780ad7563b03a490d6b3c602",
+          "kind": "markdown"
+        },
+        {
+          "path": "go/managed-agents/README.md",
+          "size": 22460,
+          "sha": "7eb8c5f0a908a06ee39ebadc92a5a22c22dd3902",
+          "kind": "markdown"
+        },
+        {
+          "path": "java/claude-api/files-api.md",
+          "size": 1198,
+          "sha": "e824fc3c8b0d280274dac380e3ccd9dd1817f094",
+          "kind": "markdown"
+        },
+        {
+          "path": "java/claude-api/README.md",
+          "size": 11946,
+          "sha": "98f7113898f873cbefd55755830a94f4dbb0b9cb",
+          "kind": "markdown"
+        },
+        {
+          "path": "java/claude-api/streaming.md",
+          "size": 655,
+          "sha": "683b153550a2c4f99b8dba35927a789082e31d88",
+          "kind": "markdown"
+        },
+        {
+          "path": "java/claude-api/tool-use.md",
+          "size": 11134,
+          "sha": "89f22e1155e719fe537dd7e91428cfd943c4c324",
+          "kind": "markdown"
+        },
+        {
+          "path": "java/managed-agents/README.md",
+          "size": 20465,
+          "sha": "f212275486c1912fa20469f1221b2ed84dc8e631",
+          "kind": "markdown"
+        },
+        {
+          "path": "LICENSE.txt",
+          "size": 11345,
+          "sha": "4f881c52d1f72f4cfb720e339e2d35c3058d01a9",
+          "kind": "markdown"
+        },
+        {
+          "path": "php/claude-api/batches.md",
+          "size": 447,
+          "sha": "3cd4a818b9fd5b1ba6329e0ab7ebfce9eae0b613",
+          "kind": "markdown"
+        },
+        {
+          "path": "php/claude-api/files-api.md",
+          "size": 476,
+          "sha": "26bd142dcdb34b63d7158409fac0e89f08745695",
+          "kind": "markdown"
+        },
+        {
+          "path": "php/claude-api/README.md",
+          "size": 6554,
+          "sha": "27f2d69dfa5964123dc5f7cd1d309c2d3417a421",
+          "kind": "markdown"
+        },
+        {
+          "path": "php/claude-api/streaming.md",
+          "size": 682,
+          "sha": "b0f2cbbc54dbea98981825bd3ebafb7339aeaf3d",
+          "kind": "markdown"
+        },
+        {
+          "path": "php/claude-api/tool-use.md",
+          "size": 9722,
+          "sha": "c22a090229ffcaabe24ad1fa28b54ded458e888f",
+          "kind": "markdown"
+        },
+        {
+          "path": "php/managed-agents/README.md",
+          "size": 16555,
+          "sha": "0117f4211a6a29205549795aa2a8fb8e158efeba",
+          "kind": "markdown"
+        },
+        {
+          "path": "python/claude-api/batches.md",
+          "size": 5723,
+          "sha": "f129f51d791635c7b3de4e8cb60469dbc4cf2e58",
+          "kind": "markdown"
+        },
+        {
+          "path": "python/claude-api/files-api.md",
+          "size": 4499,
+          "sha": "8c0db2f6be7acbaad0186e7cd3443af82453bfef",
+          "kind": "markdown"
+        },
+        {
+          "path": "python/claude-api/README.md",
+          "size": 20623,
+          "sha": "3d4f61468bcb46039fdd749c3eb2a7606aacc1da",
+          "kind": "markdown"
+        },
+        {
+          "path": "python/claude-api/sdk-upgrade.md",
+          "size": 28760,
+          "sha": "bff43ab37fad6ab7484fd9e53bb7402657faacf0",
+          "kind": "markdown"
+        },
+        {
+          "path": "python/claude-api/streaming.md",
+          "size": 11940,
+          "sha": "69788059f192d8f21ede6dae53f7e45bed376ddf",
+          "kind": "markdown"
+        },
+        {
+          "path": "python/claude-api/tool-use.md",
+          "size": 21411,
+          "sha": "3aaa8497bcd301dc39c3f8b20da9b6586885eb63",
+          "kind": "markdown"
+        },
+        {
+          "path": "python/managed-agents/README.md",
+          "size": 14823,
+          "sha": "25f37e3fd2c57bf0fa582c04d6c7be08f2f559cb",
+          "kind": "markdown"
+        },
+        {
+          "path": "ruby/claude-api/README.md",
+          "size": 4843,
+          "sha": "87024e190b69267c883c68b13b47abbae9687ccd",
+          "kind": "markdown"
+        },
+        {
+          "path": "ruby/claude-api/streaming.md",
+          "size": 235,
+          "sha": "31ca4ea54c9dd0211e30989c0f6116e06a1fd603",
+          "kind": "markdown"
+        },
+        {
+          "path": "ruby/claude-api/tool-use.md",
+          "size": 2688,
+          "sha": "adf440c7f5b8868d2241fae4d7bd1b7b9d5081ad",
+          "kind": "markdown"
+        },
+        {
+          "path": "ruby/managed-agents/README.md",
+          "size": 12201,
+          "sha": "f293db0276a0f88480a5d22c953dfe6a76467fdc",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/admin-api.md",
+          "size": 11606,
+          "sha": "a688f7b5cafa17cfb14c9a676d692d4a9573ae5f",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/agent-design.md",
+          "size": 8736,
+          "sha": "517cec6b2a5529296b999916f43533425d30effb",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/anthropic-cli.md",
+          "size": 23999,
+          "sha": "13911dadc87be8d3829ad9a9cba53d33dbe06b22",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/claude-platform-on-aws.md",
+          "size": 4420,
+          "sha": "f2a9f84f2b63b553b4af7af2fddaae129247db06",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/cost-optimization.md",
+          "size": 58448,
+          "sha": "f69f9d28880b6aa56ac33aa2f6987586c5ad7f74",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/error-codes.md",
+          "size": 20796,
+          "sha": "f2d63f962bb522b7faac478cd3b21f81d2388e3f",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/evals/build-eval.md",
+          "size": 54835,
+          "sha": "ba875b712ba63135c60aaba4710bf84681ddf34b",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/evals/cost-hillclimb.md",
+          "size": 31711,
+          "sha": "d929871e2663848dbf0872825d053c9e73efb938",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/evals/eval-audit.md",
+          "size": 27892,
+          "sha": "bc277162f32f11c98639621d94c4a3b90ce6d33d",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/evals/eval-hillclimb.md",
+          "size": 69153,
+          "sha": "7e16832bef17a195ee87da35a4fd4df1b6fc9264",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/evals/report/build-report-lite.mjs",
+          "size": 27329,
+          "sha": "ba1c1ba05eadd9b121a1a1cc07cf59443e70754a",
+          "kind": "script"
+        },
+        {
+          "path": "shared/evals/report/runner-scaffold.mjs",
+          "size": 33142,
+          "sha": "2f0220b41b4b30eb12606aa7ff95a9fee2f6e924",
+          "kind": "script"
+        },
+        {
+          "path": "shared/evals/report/SCHEMA.md",
+          "size": 16121,
+          "sha": "fb0d09db801f163809cdf184eb94cd74e0c5bc20",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/live-sources.md",
+          "size": 17732,
+          "sha": "d0693be9bf69673c1737d95ce59e8511a7e29d3a",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-api-reference.md",
+          "size": 35296,
+          "sha": "bafed57da6956e04d891b96c5a4fe36e46985141",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-client-patterns.md",
+          "size": 12095,
+          "sha": "99a349bae41e11ac20edbde5e14b885bacf413d2",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-core.md",
+          "size": 33515,
+          "sha": "431dd2968ffe7af9a3df4adc298b7f5820b68b6b",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-environments.md",
+          "size": 14234,
+          "sha": "70cee556d5124244ae5998369cec3e3d0737ed4c",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-events.md",
+          "size": 26015,
+          "sha": "07b62eb6571f885713fbcdc465ce91af56e5386a",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-memory.md",
+          "size": 11362,
+          "sha": "3c89bd781c1f42f10e8924ff661112fee6c1203f",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-multiagent.md",
+          "size": 66616,
+          "sha": "a62973e38aa3bd9f13d2962591a792d93bcac75d",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-onboarding-from-quickstart.md",
+          "size": 19798,
+          "sha": "b66d076a622febeccfcba1bc02e49f0915e45227",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-onboarding-from-url.md",
+          "size": 32707,
+          "sha": "c9ee7a224b8fcd0aaf9e193b0ef7e01f7abe8801",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-onboarding.md",
+          "size": 16787,
+          "sha": "a8619d167d5a2b78274d4bbb36961e6c70ce6394",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-outcomes.md",
+          "size": 8960,
+          "sha": "b5b2fe800394a971a28a8a086a674faba6f65f54",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-overview.md",
+          "size": 14571,
+          "sha": "f9888171694b574e8d80c28d9e2b015f3b660fc8",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-quickstarts/bug-hunter.md",
+          "size": 8096,
+          "sha": "9e6a3d2ea7e694ce6c8459b7b3959d112f6426f3",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-quickstarts/contract-tracker.md",
+          "size": 1806,
+          "sha": "44b0d20362632cf6de19ddb05e286d652154beb7",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-quickstarts/data-analyst.md",
+          "size": 1561,
+          "sha": "bfc48475e91d7beb9bb8dfa8e2fb53f723392146",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-quickstarts/deep-researcher.md",
+          "size": 2430,
+          "sha": "090fde54dfff5fa3eeb0a789622b57fc2329f14c",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-quickstarts/explainer-video-maker.md",
+          "size": 4886,
+          "sha": "55e97797cecfd8c905e12824ee3464aa79adb37d",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-quickstarts/field-monitor.md",
+          "size": 2105,
+          "sha": "79268b6c4b552850bc69597a6ad925e5aa378e2b",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-quickstarts/incident-commander.md",
+          "size": 1723,
+          "sha": "d91edb8597e48c8cfd9001c7dd8905e7e2c62b58",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-quickstarts/performance-tuner.md",
+          "size": 11394,
+          "sha": "b61d8e45a3170f0d17c7d6a0ea0c7dcdd3bdd586",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-quickstarts/sprint-retro-facilitator.md",
+          "size": 2091,
+          "sha": "1d7a11a325b12adaf2d2a79f8a9a100df9b3dbb9",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-quickstarts/structured-extractor.md",
+          "size": 1541,
+          "sha": "0f33adfe90087d93020b6261499a636d460330ad",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-quickstarts/support-agent.md",
+          "size": 1481,
+          "sha": "79eb2519e8a7b8f92433d5781a9e685d88bd98ca",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-quickstarts/support-to-eng-escalator.md",
+          "size": 1842,
+          "sha": "0558741c0411149d98bfb696f949ba917b3879cc",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-quickstarts/watchlist-scanner.md",
+          "size": 5642,
+          "sha": "19c17c3fb14446afe0ffc1485d49268edc87bff9",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-scheduled-deployments.md",
+          "size": 9561,
+          "sha": "6a6fc063a04492e6158a848aab4dbba0b8859982",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-self-hosted-sandboxes.md",
+          "size": 27926,
+          "sha": "6d00564d1275ace86cfa59fb5b6b42f361253502",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-tools.md",
+          "size": 37869,
+          "sha": "f1cf836d38b89117275e8192795f8531e2290709",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/managed-agents-webhooks.md",
+          "size": 11321,
+          "sha": "25f0592cdf26bed177b36e9e2579dea9676357fd",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/model-migration.md",
+          "size": 346255,
+          "sha": "eb523e50ece3627c2d945b11a658d4536829353c",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/models.md",
+          "size": 17502,
+          "sha": "9dd5c7840d973be30c237b59aebe31182d2c55a5",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/platform-availability.md",
+          "size": 7415,
+          "sha": "61ad66dec946aeaba023a8c6cec74c20396e88a9",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/preserved-thinking-migration.md",
+          "size": 64049,
+          "sha": "4f2051849ad23e7878c14a88008b4b3a5c8e6a7b",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/preserved-thinking-migration/causes.md",
+          "size": 39705,
+          "sha": "f963b17494ac94c8ae06348f455db9470dd7ff6f",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/preserved-thinking-migration/drop_block_probe.py",
+          "size": 66582,
+          "sha": "95f6a5146abcb3f111676c71b8a89feb3efb0495",
+          "kind": "script"
+        },
+        {
+          "path": "shared/preserved-thinking-migration/prefix_diff.py",
+          "size": 94008,
+          "sha": "cfa88044b45b4acb8b82044f51872f4f7e306c2f",
+          "kind": "script"
+        },
+        {
+          "path": "shared/prompt-audit.md",
+          "size": 49344,
+          "sha": "9f75ebb58a7dae16c860a97b5ffb2ade650356d0",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/prompt-caching.md",
+          "size": 33116,
+          "sha": "3ac5a38dcbe407794dcad614476acce42e45b95d",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/token-counting.md",
+          "size": 1603,
+          "sha": "65dbb4427e7018d527fc82dab07f3665ebfb3591",
+          "kind": "markdown"
+        },
+        {
+          "path": "shared/tool-use-concepts.md",
+          "size": 44359,
+          "sha": "ed06b97d722c113f1f39ff1e2c94165e9f990b72",
+          "kind": "markdown"
+        },
+        {
+          "path": "typescript/claude-api/batches.md",
+          "size": 2594,
+          "sha": "ff3de5eef7562bbaf501871ccbdafef38a2c20af",
+          "kind": "markdown"
+        },
+        {
+          "path": "typescript/claude-api/files-api.md",
+          "size": 2384,
+          "sha": "c8488c67140e1c4065f7ce2fb93d66ab2e817cd2",
+          "kind": "markdown"
+        },
+        {
+          "path": "typescript/claude-api/README.md",
+          "size": 15833,
+          "sha": "79b18031da6014fd4b305af159838f0a0cdddb18",
+          "kind": "markdown"
+        },
+        {
+          "path": "typescript/claude-api/streaming.md",
+          "size": 9514,
+          "sha": "4ddc2b3faa1b5af33519167a8c803308bad04c9f",
+          "kind": "markdown"
+        },
+        {
+          "path": "typescript/claude-api/tool-use.md",
+          "size": 24295,
+          "sha": "1f5ead7da17b4b985886be1a496fcbd5c235c160",
+          "kind": "markdown"
+        },
+        {
+          "path": "typescript/managed-agents/README.md",
+          "size": 14013,
+          "sha": "e177acd6a47971d722f76d8c658b0260bf176b11",
+          "kind": "markdown"
+        }
+      ],
+      "warnings": [
+        "Contains 4 script files that Claude may run when the skill is used."
+      ]
+    },
+    {
+      "id": "anthropics/skills:skills/discernment-nudge",
+      "name": "discernment-nudge",
+      "description": "After you give a substantive answer or draft that the user may act on — advice or recommendations, drafted artifacts such as goals, plans, pitches, proposals, or emails, estimates or projections, analysis or interpretation of data, factual claims they may rely on, or a multi-step argument — invoke this skill BEFORE finalizing your reply and then, if it applies, append 2-3 short follow-up questions, each tied to something specific in what you just produced, that help the user check key facts, probe the reasoning or assumptions, and notice missing context. Do this at most once per conversation. Skip it when the user asked a trivial how-to or simple lookup, wants a purely educational explanation, asked you only to format, convert, or assemble a file from content they provided, is writing code they will run, is doing creative writing or casual chat, or already asked you to double-check, cite, or review — the skill file explains these boundaries and the exact output format.",
+      "category": "Other",
+      "categorySource": "default",
+      "owner": "anthropics",
+      "repo": "skills",
+      "path": "skills/discernment-nudge",
+      "sourceUrl": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/discernment-nudge",
+      "commitSha": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "license": "Complete terms in LICENSE.txt",
+      "licenseSource": "frontmatter",
+      "updatedAt": "2026-11-06T22:32:28Z",
+      "indexedAt": "2026-11-07T20:16:55.933Z",
+      "kind": "skill",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "size": 10592,
+          "sha": "49ebbcad692ffdf70e518087468609a5c4ab9e22",
+          "kind": "markdown"
+        },
+        {
+          "path": "LICENSE.txt",
+          "size": 11345,
+          "sha": "4f881c52d1f72f4cfb720e339e2d35c3058d01a9",
+          "kind": "markdown"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "anthropics/skills:skills/doc-coauthoring",
+      "name": "doc-coauthoring",
+      "description": "Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users efficiently transfer context, refine content through iteration, and verify the doc works for readers. Trigger when user mentions writing docs, creating proposals, drafting specs, or similar documentation tasks.",
+      "category": "Documentation",
+      "categorySource": "inferred",
+      "owner": "anthropics",
+      "repo": "skills",
+      "path": "skills/doc-coauthoring",
+      "sourceUrl": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/doc-coauthoring",
+      "commitSha": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "license": null,
+      "licenseSource": null,
+      "updatedAt": "2026-11-06T22:32:28Z",
+      "indexedAt": "2026-11-07T20:16:55.933Z",
+      "kind": "skill",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "size": 15815,
+          "sha": "a5a69839ef4a161131d80b6daef10037a9686f4a",
+          "kind": "markdown"
+        }
+      ],
+      "warnings": []
+    }
+  ],
+  "skipped": []
+}
