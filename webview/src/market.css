@@ -383,6 +383,10 @@
   font-size: 11px;
 }
 
+.tl-agent {
+  margin-left: 4px;
+}
+
 .tl-source .codicon {
   font-size: 12px;
   vertical-align: -2px;
@@ -437,4 +441,11 @@
 
 .mreason .codicon {
   font-size: 11px !important;
+  flex: none;
+}
+
+.mreason-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

@@ -27,10 +27,14 @@
   --cat-design: var(--vscode-charts-purple, #b180d7);
   --cat-frontend: var(--vscode-charts-blue, #3794ff);
   --cat-backend: var(--vscode-charts-green, #89d185);
+  --cat-data: var(--vscode-terminal-ansiGreen, #0dbc79);
+  --cat-security: var(--vscode-terminal-ansiMagenta, #bc3fbc);
   --cat-testing: var(--vscode-charts-yellow, #cca700);
   --cat-debugging: var(--vscode-charts-red, #f14c4c);
   --cat-automation: var(--vscode-charts-orange, #d18616);
+  --cat-agents: var(--vscode-terminal-ansiBlue, #2472c8);
   --cat-documentation: var(--vscode-terminal-ansiCyan, #11a8cd);
+  --cat-business: var(--vscode-terminal-ansiYellow, #e5e510);
   --cat-other: var(--vscode-descriptionForeground, #858585);
 }
 
@@ -97,6 +101,92 @@ button {
   border-bottom: 1px solid var(--st-border);
   background: var(--st-bg);
   min-height: 38px;
+}
+
+/* Live: sessions with recorded skill use in the last 10 minutes, one compact chip each. */
+.live-strip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 3px 10px;
+  border-bottom: 1px solid var(--st-border);
+  background: var(--st-bg);
+  font-size: 12px;
+}
+
+.live-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  color: var(--st-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.live-chips {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.live-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  max-width: 360px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--st-node-border);
+  border-radius: var(--st-radius);
+  background: transparent;
+  color: var(--st-fg);
+  font: inherit;
+  line-height: 20px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.live-chip:hover {
+  background: var(--st-hover);
+}
+
+.live-chip.is-on {
+  border-color: var(--st-focus);
+  background: var(--st-selected-bg);
+}
+
+.live-chip:focus-visible {
+  outline: 1px solid var(--st-focus);
+  outline-offset: 1px;
+}
+
+.live-project {
+  flex: 0 0 auto;
+  max-width: 140px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The skill name gives way first when a chip is too long. */
+.live-skill {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.live-muted {
+  flex: 0 0 auto;
+  color: var(--st-muted);
 }
 
 .toolbar-spacer {
@@ -428,7 +518,7 @@ select:focus {
   height: 44px;
   padding: 0 9px 0 13px;
   cursor: pointer;
-  transition: border-color 80ms linear, background-color 80ms linear;
+  transition: border-color 900ms ease-out, background-color 900ms ease-out;
 }
 
 .gnode-skill:hover,
@@ -442,10 +532,27 @@ select:focus {
   border-color: var(--st-focus);
 }
 
+/* A new recorded use just arrived: the node takes the focus border for a moment, then fades back. */
+.gnode-skill.is-fresh {
+  border-color: var(--st-focus);
+  background: var(--st-active-bg);
+  transition: none;
+}
+
 /* Recorded in the same session as the selected skill: same dashed language as the edge. */
 .gnode-skill.is-related {
   border-style: dashed;
   border-color: var(--st-fg);
+}
+
+/* A Live session is picked in the Live strip: its skills keep the focus border, the rest step back. */
+.gnode-skill.is-in-session {
+  border-color: var(--st-focus);
+}
+
+.gnode-skill.is-dimmed,
+.list-row.is-dimmed {
+  opacity: 0.4;
 }
 
 .gnode-skill.is-shadowed .gnode-title {
@@ -519,10 +626,14 @@ select:focus {
 .cat-design { background: var(--cat-design); }
 .cat-frontend { background: var(--cat-frontend); }
 .cat-backend { background: var(--cat-backend); }
+.cat-data { background: var(--cat-data); }
+.cat-security { background: var(--cat-security); }
 .cat-testing { background: var(--cat-testing); }
 .cat-debugging { background: var(--cat-debugging); }
 .cat-automation { background: var(--cat-automation); }
+.cat-agents { background: var(--cat-agents); }
 .cat-documentation { background: var(--cat-documentation); }
+.cat-business { background: var(--cat-business); }
 .cat-other { background: var(--cat-other); }
 
 /* ---- List view --------------------------------------------------------------------------- */

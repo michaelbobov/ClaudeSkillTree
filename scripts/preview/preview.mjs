@@ -41,7 +41,7 @@ if (!chrome) {
 const dumper = path.join(out, 'dump-state.cjs');
 await esbuild.build({ entryPoints: [path.join(root, 'scripts/preview/dump-state.ts')], bundle: true, platform: 'node', format: 'cjs', outfile: dumper, logLevel: 'warning' });
 const home = fixtures ? path.join(root, 'test/fixtures/home') : os.homedir();
-const ws = fixtures ? path.join(root, 'test/fixtures/workspace') : root;
+const ws = fixtures ? path.join(root, 'test/fixtures/workspace') : (process.env.SKILLTREE_PREVIEW_WS ?? root);
 const stateFile = path.join(out, 'state.json');
 const dump = spawnSync(process.execPath, [dumper, home, ws, stateFile], { encoding: 'utf8' });
 if (dump.status !== 0) {
@@ -68,7 +68,9 @@ const state = dumped.state;
 const firstSkill = state.skills[0]?.id ?? '';
 const previewId = encodeURIComponent(dumped.previewId ?? '');
 const usageSel = encodeURIComponent(dumped.usageSelect ?? firstSkill);
-const scenarios = [
+const marketing = process.env.PREVIEW_SET === 'marketing';
+const scale = process.env.PREVIEW_SCALE ?? '1';
+const allScenarios = [
   ['graph-dark', '1440,860', ''],
   ['graph-light', '1440,860', 'theme=light'],
   ['graph-hc', '1440,860', 'theme=hc'],
@@ -86,6 +88,9 @@ const scenarios = [
   ['market-hc', '1440,900', 'page=marketplace&theme=hc'],
   ['market-foryou-dark', '1440,900', 'page=marketplace&foryou=1'],
   ['market-foryou-light', '1440,900', 'page=marketplace&foryou=1&theme=light'],
+  ['market-project-dark', '1440,900', 'page=marketplace&project=1&foryou=1'],
+  ['market-project-light', '1440,900', 'page=marketplace&project=1&theme=light'],
+  ['market-project-narrow-dark', '640,900', 'page=marketplace&project=1'],
   ['market-preview-dark', '1440,1000', `page=marketplace&sel=${previewId}`],
   ['market-narrow-dark', '640,900', `page=marketplace&sel=${previewId}`],
   ['activity-off-dark', '1200,700', 'page=activity'],
@@ -93,13 +98,29 @@ const scenarios = [
   ['activity-light', '1300,700', 'page=activity&fixture=1&theme=light'],
   ['activity-hc', '1300,700', 'page=activity&fixture=1&theme=hc'],
   ['activity-narrow-dark', '600,700', 'page=activity&fixture=1'],
+  ['live-dark', '1300,760', 'live=1&order=recent'],
+  ['live-light', '1300,760', 'live=1&theme=light'],
+  ['live-narrow-dark', '600,700', 'live=1&view=list'],
 ];
+// PREVIEW_SET=marketing: a few tight crops for the website (pair with SKILLTREE_USAGE_LOG and PREVIEW_SCALE=2).
+const marketingScenarios = [
+  ['mk-tree-used', '1280,800', `usage=1&order=recent&select=${usageSel}`],
+  ['mk-hero', '800,640', `usage=1&order=recent&select=${usageSel}`],
+  ['mk-tree', '1240,760', 'usage=1&order=recent'],
+  ['mk-activity', '720,640', 'page=activity&fixture=1'],
+  ['mk-foryou', '1280,820', 'page=marketplace&foryou=1'],
+  ['mk-market', '1280,820', 'page=marketplace'],
+  ['mk-preview', '1280,900', `page=marketplace&sel=${previewId}`],
+];
+// PREVIEW_ONLY=<regex>: render only the matching scenarios (quick checks).
+const only = process.env.PREVIEW_ONLY ? new RegExp(process.env.PREVIEW_ONLY) : null;
+const scenarios = (marketing ? marketingScenarios : allScenarios).filter(([name]) => !only || only.test(name));
 const profile = path.join(out, 'chrome-profile');
 const written = [];
 for (const [name, size, query] of scenarios) {
   const file = path.join(out, `${name}.png`);
   fs.rmSync(file, { force: true });
-  spawnSync(chrome, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run', '--no-default-browser-check', `--user-data-dir=${profile}`, `--window-size=${size}`, '--virtual-time-budget=4000', `--screenshot=${file}`, `file://${page}?${query}`], { encoding: 'utf8', timeout: 60000 });
+  spawnSync(chrome, ['--headless=new', '--disable-gpu', '--hide-scrollbars', `--force-device-scale-factor=${scale}`, '--no-first-run', '--no-default-browser-check', `--user-data-dir=${profile}`, `--window-size=${size}`, '--virtual-time-budget=4000', `--screenshot=${file}`, `file://${page}?${query}`], { encoding: 'utf8', timeout: 60000 });
   if (fs.existsSync(file) && fs.statSync(file).size > 1000) written.push(file);
   else console.log(`  missing screenshot: ${name}`);
 }

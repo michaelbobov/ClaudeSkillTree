@@ -186,7 +186,23 @@ function Banner({ state }: { state: MarketplaceState }) {
   );
 }
 
-function Card({ entry, state, selected, onSelect, reason }: { entry: MarketplaceEntryView; state: MarketplaceState; selected: boolean; onSelect(id: string): void; reason?: string }) {
+function Card({
+  entry,
+  state,
+  selected,
+  onSelect,
+  reason,
+  reasonTitle = 'Suggested from your recorded skill use',
+  reasonIcon = 'sparkle',
+}: {
+  entry: MarketplaceEntryView;
+  state: MarketplaceState;
+  selected: boolean;
+  onSelect(id: string): void;
+  reason?: string;
+  reasonTitle?: string;
+  reasonIcon?: string;
+}) {
   const onKey = (e: KeyboardEvent) => {
     if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
       e.preventDefault();
@@ -227,8 +243,8 @@ function Card({ entry, state, selected, onSelect, reason }: { entry: Marketplace
       </div>
       <p className="mcard-desc">{entry.description || <em>No description</em>}</p>
       {reason && (
-        <div className="mreason" title="Suggested from your recorded skill use">
-          <i className="codicon codicon-sparkle" aria-hidden /> {reason}
+        <div className="mreason" title={`${reason}\n\n${reasonTitle}`}>
+          <i className={`codicon codicon-${reasonIcon}`} aria-hidden /> <span className="mreason-text">{reason}</span>
         </div>
       )}
       <div className="mcard-meta">
@@ -432,9 +448,14 @@ export function MarketplaceApp() {
 
   const categories = CATEGORIES.filter((c) => entries.some((e) => e.category === c));
   const filtered = ui.query.trim() !== '' || ui.category !== 'all' || ui.install !== 'all' || (!!ui.repo && ui.repo !== 'all');
-  const forYou = (state?.forYou ?? [])
-    .map((r) => ({ entry: entries.find((e) => e.id === r.id), reason: r.reason }))
-    .filter((x): x is { entry: MarketplaceEntryView; reason: string } => !!x.entry && x.entry.installState === 'not-installed');
+  const suggested = (list: { id: string; reason: string }[] | undefined, skip: ReadonlySet<string> = new Set()) =>
+    (list ?? [])
+      .filter((r) => !skip.has(r.id))
+      .map((r) => ({ entry: entries.find((e) => e.id === r.id), reason: r.reason }))
+      .filter((x): x is { entry: MarketplaceEntryView; reason: string } => !!x.entry && x.entry.installState === 'not-installed');
+  const forProject = suggested(state?.forProject?.items);
+  const forYou = suggested(state?.forYou, new Set(forProject.map((x) => x.entry.id)));
+  const showForProject = !filtered && forProject.length > 0;
   const showForYou = !filtered && forYou.length > 0;
 
   let main;
@@ -469,6 +490,28 @@ export function MarketplaceApp() {
   } else {
     main = (
       <div className="mlist" role="list" aria-label="Catalog skills" ref={listRef}>
+        {showForProject && (
+          <>
+            <div className="mgroup">
+              <i className="codicon codicon-folder" aria-hidden /> For this project{' '}
+              <span className="muted" title="Detected from file names and dependency manifests in the open folder. Nothing is sent anywhere.">
+                · uses {state.forProject!.summary}
+              </span>
+            </div>
+            {forProject.map((x) => (
+              <Card
+                key={`fp:${x.entry.id}`}
+                entry={x.entry}
+                state={state}
+                reason={x.reason}
+                reasonIcon="folder"
+                reasonTitle="Suggested because the open folder uses this technology (from its files and manifests)"
+                selected={x.entry.id === ui.selectedId}
+                onSelect={(id) => setUi((u) => ({ ...u, selectedId: id }))}
+              />
+            ))}
+          </>
+        )}
         {showForYou && (
           <>
             <div className="mgroup">
@@ -477,9 +520,9 @@ export function MarketplaceApp() {
             {forYou.map((x) => (
               <Card key={`fy:${x.entry.id}`} entry={x.entry} state={state} reason={x.reason} selected={x.entry.id === ui.selectedId} onSelect={(id) => setUi((u) => ({ ...u, selectedId: id }))} />
             ))}
-            <div className="mgroup">All skills</div>
           </>
         )}
+        {(showForProject || showForYou) && <div className="mgroup">All skills</div>}
         {shown.map((e) => (
           <Card key={e.id} entry={e} state={state} selected={e.id === ui.selectedId} onSelect={(id) => setUi((u) => ({ ...u, selectedId: id }))} />
         ))}

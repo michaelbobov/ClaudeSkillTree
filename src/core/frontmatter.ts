@@ -8,7 +8,7 @@
 // - Names containing control, zero-width, bidi, private-use characters or `<`/`>` are refused by Claude Code.
 
 import { parseDocument } from 'yaml';
-import { isCategory, type Category, type FrontmatterField, type SkillIssue } from '../shared/types';
+import { CATEGORIES, isCategory, type Category, type FrontmatterField, type SkillIssue } from '../shared/types';
 
 export interface ParsedSkill {
   /** Parsed frontmatter mapping, or null when absent/invalid. */
@@ -261,9 +261,7 @@ export function parseSkillMarkdown(text: string, dirName: string): ParsedSkill {
     (meta && typeof meta === 'object' && !Array.isArray(meta) ? (meta as Record<string, unknown>).category : undefined);
   if (typeof catCandidate === 'string') {
     const normalized = catCandidate.trim().toLowerCase();
-    const match = ['Design', 'Frontend', 'Backend', 'Testing', 'Debugging', 'Automation', 'Documentation', 'Other'].find(
-      (c) => c.toLowerCase() === normalized,
-    );
+    const match = CATEGORIES.find((c) => c.toLowerCase() === normalized);
     if (isCategory(match)) frontmatterCategory = match;
   }
 

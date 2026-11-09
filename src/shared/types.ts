@@ -1,4 +1,4 @@
-import type { UsageSummary } from './activity';
+import type { ActivityEvent, UsageSummary } from './activity';
 
 // Data model shared by the extension host and the webview.
 // Everything here must be plain JSON (it crosses the postMessage boundary).
@@ -7,10 +7,14 @@ export const CATEGORIES = [
   'Design',
   'Frontend',
   'Backend',
+  'Data',
+  'Security',
   'Testing',
   'Debugging',
   'Automation',
+  'Agents',
   'Documentation',
+  'Business',
   'Other',
 ] as const;
 
@@ -148,4 +152,10 @@ export interface ActivitySummaryState extends UsageSummary {
   enabled: boolean;
   /** When tracking was enabled; nothing before this time is known. */
   since: string | null;
+  /** The same counts limited to uses recorded in this window's workspace folders (absent without a folder). */
+  here?: UsageSummary;
+  /** Events from the last few minutes, newest first, for the Live strip (sessions working now). */
+  recent?: ActivityEvent[];
+  /** Session id → end time, for sessions Claude Code reported as ended (left out of the Live strip). */
+  ended?: Record<string, string>;
 }

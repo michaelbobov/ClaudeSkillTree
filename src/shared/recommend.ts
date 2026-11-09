@@ -81,6 +81,19 @@ export interface Recommendation {
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 /**
+ * Whether a catalog skill is one you do not have yet: not tied to a local skill (see matchOrigins),
+ * and no local folder or skill with its name (Claude Code uses one skill per name).
+ */
+export function availableFor(
+  locals: readonly Pick<LocalSkillRef, 'dirName' | 'name'>[],
+  origins: ReadonlyMap<string, { entry: CatalogEntry }>,
+): (e: CatalogEntry) => boolean {
+  const have = new Set(locals.flatMap((s) => [s.dirName.toLowerCase(), s.name.toLowerCase()]));
+  const owned = new Set([...origins.values()].map((o) => o.entry.id));
+  return (e) => e.kind === 'skill' && !owned.has(e.id) && !have.has(installFolderName(e).toLowerCase()) && !have.has(e.name.toLowerCase());
+}
+
+/**
  * Catalog skills you do not have, ranked from your recorded use:
  *  1. other skills from the repositories your used skills come from (weighted by those uses);
  *  2. the best-starred skills in the category you use most.
@@ -101,9 +114,7 @@ export function recommendFromUsage(
     .sort((a, b) => b.count - a.count || a.s.name.localeCompare(b.s.name));
   if (used.length === 0) return [];
 
-  const have = new Set(locals.flatMap((s) => [s.dirName.toLowerCase(), s.name.toLowerCase()]));
-  const owned = new Set([...origins.values()].map((o) => o.entry.id));
-  const available = (e: CatalogEntry) => e.kind === 'skill' && !owned.has(e.id) && !have.has(installFolderName(e).toLowerCase()) && !have.has(e.name.toLowerCase());
+  const available = availableFor(locals, origins);
   const stars = (e: CatalogEntry) => catalog.repositoryStats?.[`${e.owner}/${e.repo}`]?.stars ?? 0;
   const picked = new Map<string, Recommendation>();
 

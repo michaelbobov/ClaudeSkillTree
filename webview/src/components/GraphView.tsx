@@ -17,7 +17,7 @@ import {
 } from '@xyflow/react';
 import type { ActivitySummaryState, Category, NodePosition, OrganizedSkill } from '@shared/types';
 import { LAYOUT, buildGraph, coUsedSkills, neighbourSkill, pathEdgeIds, skillCompare, skillNodeId, type GraphNode, type SkillOrder } from '@shared/graph';
-import { usageFor, type SkillUsage } from '@shared/activity';
+import { usageFor, usageKeys, type SkillUsage } from '@shared/activity';
 import { unusedDays } from '@shared/recommend';
 import { post } from '../vscodeBridge';
 import { CategoryDot, shortAgo, sourceIcon, sourceText, usageTitle } from './common';
@@ -44,11 +44,13 @@ interface GraphViewProps {
   /** Recorded use (opt-in hooks only). */
   activity?: ActivitySummaryState;
   order: SkillOrder;
+  /** Skills (recorded names) of the Live session picked in the Live strip; others are dimmed. */
+  sessionKeys?: ReadonlySet<string> | null;
 }
 
 type RootData = { label: string; detail: string };
 type CategoryData = { category: Category; count: number; collapsed: boolean; width: number; onToggle(c: Category): void };
-type SkillData = { skill: OrganizedSkill; highlighted: boolean; related: boolean; usage?: SkillUsage; unused: number | null };
+type SkillData = { skill: OrganizedSkill; highlighted: boolean; related: boolean; usage?: SkillUsage; unused: number | null; fresh?: boolean; session?: 'in' | 'out' };
 type OrgEdgeData = { shape: 'step' | 'elbow'; highlighted: boolean; trunkOffset?: number };
 type ActEdgeData = { sessions: number; sameColumn: boolean };
 
@@ -117,7 +119,7 @@ const SkillNode = memo(function SkillNode({ data, selected }: NodeProps<SkillNod
   const where = `${sourceText(s)}${s.shadowedBy ? ' · shadowed by a higher-precedence skill' : ''}`;
   return (
     <div
-      className={`gnode gnode-skill ${selected ? 'is-selected' : ''} ${data.highlighted ? 'is-highlighted' : ''} ${data.related ? 'is-related' : ''} ${s.shadowedBy ? 'is-shadowed' : ''}`}
+      className={`gnode gnode-skill ${selected ? 'is-selected' : ''} ${data.highlighted ? 'is-highlighted' : ''} ${data.related ? 'is-related' : ''} ${data.fresh ? 'is-fresh' : ''} ${data.session === 'in' ? 'is-in-session' : data.session === 'out' ? 'is-dimmed' : ''} ${s.shadowedBy ? 'is-shadowed' : ''}`}
       style={{ width: LAYOUT.nodeWidth - LAYOUT.skillIndent }}
       title={`${s.command}\n${where}${s.description ? `\n\n${s.description.slice(0, 300)}${s.description.length > 300 ? '…' : ''}` : ''}`}
     >
@@ -230,7 +232,7 @@ function toFlowNodes(
 }
 
 const GraphInner = forwardRef<GraphHandle, GraphViewProps>(function GraphInner(props, ref) {
-  const { skills, workspaceName, totalCount, locationCount, positions, collapsed, selectedId, onSelect, onOpen, layoutKey, activity, order } = props;
+  const { skills, workspaceName, totalCount, locationCount, positions, collapsed, selectedId, onSelect, onOpen, layoutKey, activity, order, sessionKeys } = props;
   const flow = useReactFlow<FlowNode, FlowEdge>();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [hoverId, setHoverId] = useState<string | null>(null);
@@ -285,6 +287,22 @@ const GraphInner = forwardRef<GraphHandle, GraphViewProps>(function GraphInner(p
   }, [selectedId, byId, skills, activity]);
   const relatedIds = useMemo(() => new Set(coUsed.map((c) => skillNodeId(c.skill.id))), [coUsed]);
 
+  // A skill whose recorded use count just went up is marked for a moment (a new use arrived while
+  // you were looking). Not on first render, and only for real increases.
+  const lastCounts = useRef<Map<string, number> | null>(null);
+  const [fresh, setFresh] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    const counts = new Map(skills.map((s) => [s.id, usageFor(activity, s)?.count ?? 0]));
+    const before = lastCounts.current;
+    lastCounts.current = counts;
+    if (!before) return;
+    const up = skills.filter((s) => (counts.get(s.id) ?? 0) > (before.get(s.id) ?? 0)).map((s) => skillNodeId(s.id));
+    if (up.length === 0) return;
+    setFresh(new Set(up));
+    const t = setTimeout(() => setFresh(new Set()), 1800);
+    return () => clearTimeout(t);
+  }, [skills, activity]);
+
   const renderedNodes = useMemo(
     () =>
       nodes.map((n) => {
@@ -292,10 +310,12 @@ const GraphInner = forwardRef<GraphHandle, GraphViewProps>(function GraphInner(p
         const isSel = n.id === selectedNodeId;
         const isHl = n.id === highlightFrom;
         const isRel = relatedIds.has(n.id);
-        if (n.selected === isSel && n.data.highlighted === isHl && n.data.related === isRel) return n;
-        return { ...n, selected: isSel, data: { ...n.data, highlighted: isHl, related: isRel } };
+        const isFresh = fresh.has(n.id);
+        const session: SkillData['session'] = sessionKeys ? (usageKeys(n.data.skill).some((k) => sessionKeys.has(k)) ? 'in' : 'out') : undefined;
+        if (n.selected === isSel && n.data.highlighted === isHl && n.data.related === isRel && !!n.data.fresh === isFresh && n.data.session === session) return n;
+        return { ...n, selected: isSel, data: { ...n.data, highlighted: isHl, related: isRel, fresh: isFresh, session } };
       }),
-    [nodes, selectedNodeId, highlightFrom, relatedIds],
+    [nodes, selectedNodeId, highlightFrom, relatedIds, fresh, sessionKeys],
   );
 
   const edges = useMemo<FlowEdge[]>(() => {

@@ -2,8 +2,9 @@
 //
 // - Refuses to touch a settings file that is not valid JSON.
 // - Backs the file up first and writes atomically (temp file + rename).
-// - Adds exactly two handlers, identified by the recorder path in `args[0]`:
-//     PreToolUse (matcher "Skill") and UserPromptExpansion (all prompt-type commands).
+// - Adds three handlers, identified by the recorder path in `args[0]`: PreToolUse (matcher "Skill"),
+//   UserPromptExpansion (all prompt-type commands) and SessionEnd (so ended sessions leave the Live
+//   strip). Installs from before SessionEnd was added still count as tracking.
 // - Disable restores the backup byte-for-byte when the file is unchanged since enabling;
 //   otherwise it removes only SkillTree's handlers and leaves everything else alone.
 
@@ -61,13 +62,15 @@ export function isSkillTreeHandler(h: unknown, recorderPath: string): boolean {
   return typeof h === 'object' && h !== null && Array.isArray((h as Handler).args) && (h as Handler).args![0] === recorderPath;
 }
 
-export function skillTreeHandlers(nodePath: string, recorderPath: string, logFile: string): Record<'PreToolUse' | 'UserPromptExpansion', Group> {
+export function skillTreeHandlers(nodePath: string, recorderPath: string, logFile: string): Record<'PreToolUse' | 'UserPromptExpansion' | 'SessionEnd', Group> {
   // Synchronous on purpose: the recorder finishes in ~15 ms, and Claude Code ends `-p` sessions by
   // killing async hooks still running, which can lose the event of a short session.
   const handler = (): Handler => ({ type: 'command', command: nodePath, args: [recorderPath, logFile], timeout: 5 });
   return {
     PreToolUse: { matcher: 'Skill', hooks: [handler()] },
     UserPromptExpansion: { hooks: [handler()] },
+    // Records only the session id and the time it ended.
+    SessionEnd: { hooks: [handler()] },
   };
 }
 
@@ -139,6 +142,8 @@ export async function disableTracking(install: Pick<TrackingInstall, 'settingsFi
   if (current === null) return { mode: 'absent', removedHandlers: 0 };
 
   if (sha256(current) === install.writtenHash) {
+    const { json } = await readSettings(install.settingsFile);
+    const mine = Object.values(json.hooks ?? {}).flatMap((g) => (Array.isArray(g) ? g : [])).flatMap((g: Group) => g?.hooks ?? []).filter((h) => isSkillTreeHandler(h, install.recorderPath)).length;
     if (install.backupFile) {
       const original = await fs.readFile(install.backupFile, 'utf8');
       await atomicWrite(install.settingsFile, original);
@@ -146,7 +151,7 @@ export async function disableTracking(install: Pick<TrackingInstall, 'settingsFi
     } else {
       await fs.rm(install.settingsFile, { force: true });
     }
-    return { mode: 'restored', removedHandlers: 2 };
+    return { mode: 'restored', removedHandlers: mine };
   }
 
   // The file changed since enabling: surgically remove only SkillTree's handlers.

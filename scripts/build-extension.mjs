@@ -21,7 +21,7 @@ const configs = tests
   ? [
       {
         ...common,
-        entryPoints: ['test/integration/extension.test.ts', 'test/integration/marketplace.test.ts', 'test/integration/activity.test.ts', 'test/integration/claude.test.ts'],
+        entryPoints: ['test/integration/extension.test.ts', 'test/integration/marketplace.test.ts', 'test/integration/activity.test.ts', 'test/integration/claude.test.ts', 'test/integration/projectFit.test.ts'],
         outdir: 'out/integration',
         external: ['vscode', 'mocha'],
       },

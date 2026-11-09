@@ -4,7 +4,7 @@
 // always exits 0, so it can never block or alter Claude Code. No prompt text or arguments are stored.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { parseHookInput } from '../shared/activity';
+import { parseHookInput, parseSessionEnd } from '../shared/activity';
 
 const MAX_INPUT = 1024 * 1024;
 const MAX_LOG = 10 * 1024 * 1024;
@@ -24,7 +24,8 @@ function main(): void {
   } catch {
     return;
   }
-  const event = parseHookInput(payload, { projectDir: process.env.CLAUDE_PROJECT_DIR });
+  // A skill use, or a session ending (so the Skill Tree's Live strip can drop it).
+  const event = parseHookInput(payload, { projectDir: process.env.CLAUDE_PROJECT_DIR }) ?? parseSessionEnd(payload);
   if (!event) return;
   fs.mkdirSync(path.dirname(logFile), { recursive: true });
   try {

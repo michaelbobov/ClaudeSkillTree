@@ -116,7 +116,10 @@ export async function planInstall(entry: CatalogEntry, skillsRoot: string, scope
     total += f.size;
     files.push(f);
   }
-  if (!files.some((f) => f.path === 'SKILL.md')) throw new InstallError('unsafe', 'Entry has no SKILL.md.');
+  if (!files.some((f) => f.path === 'SKILL.md')) {
+    const linked = excluded.some((e) => e.path === 'SKILL.md');
+    throw new InstallError('unsafe', linked ? 'SKILL.md is a symbolic link in the repository, and SkillTree does not install links.' : 'Entry has no SKILL.md.');
+  }
   if (files.length > CATALOG_LIMITS.maxFilesPerSkill) throw new InstallError('unsafe', 'Entry has too many files.');
   if (total > CATALOG_LIMITS.maxSkillBytes) throw new InstallError('unsafe', 'Entry exceeds the total size limit.');
   // Case-insensitive filesystems: a file and a directory may not collide either.

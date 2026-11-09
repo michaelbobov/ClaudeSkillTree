@@ -28,6 +28,7 @@ describe('enable/disable tracking', () => {
     expect(json.hooks.PreToolUse[0].matcher).toBe('Bash');
     expect(json.hooks.PreToolUse[1]).toEqual({ matcher: 'Skill', hooks: [{ type: 'command', command: '/usr/local/bin/node', args: [opts().recorderPath, opts().logFile], timeout: 5 }] });
     expect(json.hooks.UserPromptExpansion[0].matcher).toBeUndefined();
+    expect(json.hooks.SessionEnd).toEqual([{ hooks: [{ type: 'command', command: '/usr/local/bin/node', args: [opts().recorderPath, opts().logFile], timeout: 5 }] }]);
     expect(hasTracking(json, opts().recorderPath)).toBe(true);
     expect(await fs.readFile(install.backupFile!, 'utf8')).toBe(original);
   });
@@ -37,7 +38,7 @@ describe('enable/disable tracking', () => {
     await fs.writeFile(file, original);
     const install = await enableTracking(opts());
     const r = await disableTracking(install);
-    expect(r.mode).toBe('restored');
+    expect(r).toEqual({ mode: 'restored', removedHandlers: 3 });
     expect(await fs.readFile(file, 'utf8')).toBe(original);
     expect((await fs.readdir(path.dirname(file))).sort()).toEqual(['settings.json']);
   });
@@ -50,7 +51,7 @@ describe('enable/disable tracking', () => {
     json.theme = 'dark';
     await fs.writeFile(file, JSON.stringify(json));
     const r = await disableTracking(install);
-    expect(r).toEqual({ mode: 'removed', removedHandlers: 2 });
+    expect(r).toEqual({ mode: 'removed', removedHandlers: 3 });
     const after = JSON.parse(await fs.readFile(file, 'utf8'));
     expect(after).toEqual({ model: 'opus', theme: 'dark', hooks: { PreToolUse: [{ matcher: 'Bash', hooks: [{ type: 'command', command: '/x/check.sh' }] }] } });
   });
@@ -77,3 +78,11 @@ describe('enable/disable tracking', () => {
     expect(await fs.readFile(file, 'utf8')).toBe('{ "model": "opus", }');
   });
 });
+
+describe('installs from before SessionEnd', () => {
+  it('still count as tracking with only the two skill handlers', () => {
+    const h = { type: 'command', command: '/n', args: [opts().recorderPath, opts().logFile], timeout: 5 };
+    expect(hasTracking({ hooks: { PreToolUse: [{ matcher: 'Skill', hooks: [h] }], UserPromptExpansion: [{ hooks: [h] }] } }, opts().recorderPath)).toBe(true);
+  });
+});
+

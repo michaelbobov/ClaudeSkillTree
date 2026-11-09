@@ -93,6 +93,15 @@ describe('installer', () => {
     expect(await codeOf(planInstall({ ...entry, files: [...entry.files, { path: 'big.bin', size: CATALOG_LIMITS.maxFileBytes + 1, sha: 'a'.repeat(40), kind: 'other' }] }, skillsRoot, 'project'))).toBe('unsafe');
   });
 
+  it('refuses an entry whose SKILL.md is a symbolic link, and says why', async () => {
+    const entry = await makeEntry(mirror, files);
+    const linked = { ...entry, files: entry.files.map((f) => (f.path === 'SKILL.md' ? { ...f, kind: 'symlink' as const } : f)) };
+    const err = await planInstall(linked, skillsRoot, 'project').catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(InstallError);
+    expect((err as InstallError).code).toBe('unsafe');
+    expect((err as Error).message).toMatch(/SKILL\.md is a symbolic link/);
+  });
+
   it('rolls back on integrity failure and leaves nothing behind', async () => {
     const entry = await makeEntry(mirror, files);
     const tampered = { ...entry, files: entry.files.map((f) => (f.path === 'reference.md' ? { ...f, sha: 'f'.repeat(40) } : f)) };

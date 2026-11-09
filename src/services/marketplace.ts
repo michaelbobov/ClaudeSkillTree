@@ -115,6 +115,7 @@ export class MarketplaceService implements vscode.Disposable {
       projectInstallBlocked: this.projectBlocked(),
       claudeSuggestions: this.claudeSuggestions(),
       forYou: this.recommendations(),
+      forProject: this.projectRecommendations(),
       busyId: this.busyId,
     };
   }
@@ -123,6 +124,8 @@ export class MarketplaceService implements vscode.Disposable {
   claudeSuggestions: () => boolean = () => false;
   /** Set by the extension: usage-driven suggestions (Phase 5). */
   recommendations: () => { id: string; reason: string }[] = () => [];
+  /** Set by the extension: skills that fit the open workspace's technologies. */
+  projectRecommendations: () => MarketplaceState['forProject'] = () => undefined;
 
   /** Re-sends state (e.g. after Claude suggestions were switched on or off). */
   notify(): void {

@@ -1,4 +1,4 @@
-import type { SkillTreeState } from '@shared/types';
+import type { ActivitySummaryState, SkillTreeState } from '@shared/types';
 import { SOURCE_LABELS } from '@shared/types';
 import { post } from '../vscodeBridge';
 import { unusedDays } from '@shared/recommend';
@@ -7,8 +7,7 @@ function time(ts: number): string {
   return new Date(ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 }
 
-function Activity({ state }: { state: SkillTreeState }) {
-  const a = state.activity;
+function Activity({ state, activity: a, scope, onScope }: { state: SkillTreeState; activity: ActivitySummaryState | undefined; scope: 'all' | 'here' | null; onScope(s: 'all' | 'here'): void }) {
   if (!a) {
     return (
       <span className="status-activity">
@@ -38,6 +37,16 @@ function Activity({ state }: { state: SkillTreeState }) {
           </span>
         </span>
       )}
+      {scope && (
+        <button
+          type="button"
+          className="link-btn"
+          title={scope === 'all' ? 'Counting use recorded in every project. Click to count only use recorded in this workspace.' : 'Counting only use recorded in this workspace. Click to count every project.'}
+          onClick={() => onScope(scope === 'all' ? 'here' : 'all')}
+        >
+          {scope === 'all' ? 'All projects' : 'This project'}
+        </button>
+      )}
       <button type="button" className="link-btn" onClick={() => post({ type: 'openActivity' })}>
         Timeline
       </button>
@@ -47,12 +56,18 @@ function Activity({ state }: { state: SkillTreeState }) {
 
 export function StatusBar({
   state,
+  activity,
+  scope,
+  onScope,
   shown,
   filtered,
   view,
   showActivityLegend,
 }: {
   state: SkillTreeState;
+  activity: ActivitySummaryState | undefined;
+  scope: 'all' | 'here' | null;
+  onScope(s: 'all' | 'here'): void;
   shown: number;
   filtered: boolean;
   view: 'graph' | 'list';
@@ -72,7 +87,7 @@ export function StatusBar({
         {withIssues > 0 && <span className="status-muted"> · {withIssues} with warnings</span>}
         {state.scannedAt && <span className="status-muted"> · scanned {time(state.scannedAt)}</span>}
       </span>
-      {total > 0 && <Activity state={state} />}
+      {total > 0 && <Activity state={state} activity={activity} scope={scope} onScope={onScope} />}
       {view === 'graph' && total > 0 && (
         <span className="legend">
           <span className="legend-item" title="Solid lines show how skills are organized by category. They are not dependencies and do not indicate usage.">

@@ -55,5 +55,21 @@ Matcher: "Matches on `command_name`. Leave the matcher empty to fire on every pr
 ## What SkillTree records (and does not)
 
 Recorded per event: timestamp, skill/command name, capture source (`PreToolUse:Skill` or `UserPromptExpansion`),
-`session_id`, `cwd`, `CLAUDE_PROJECT_DIR`, `command_source` and whether arguments were present (boolean).
+`session_id`, `cwd`, `CLAUDE_PROJECT_DIR`, `command_source`, whether arguments were present (boolean), and inside a
+subagent `agent_id`/`agent_type`. A `SessionEnd` line records only `session_id` and the time.
 **Not recorded:** `prompt`, `command_args`, `tool_input.args`, transcript paths or contents.
+
+## Subagents, background agents and session ends (checked 2026-11-08)
+
+Real `claude -p` runs (haiku) in a temp project, with a probe hook that logged event names, ids and input key names only:
+
+- A skill invoked inside a subagent fires the same `PreToolUse` (matcher `Skill`) with two extra common fields,
+  `agent_id` (e.g. `a53be242a859492a6`) and `agent_type` (`general-purpose`); `session_id` is the **parent** session's.
+  The docs say the same applies to in-process agent-team teammates.
+- `SubagentStart` and `SubagentStop` carry `session_id`, `agent_id` and `agent_type` (SkillTree does not hook them).
+- When the subagent ran in the background and reported back, `UserPromptSubmit` fired again with the same fields
+  as a typed prompt; the prompt was a single `<task-notification>…</task-notification>` element. SkillTree's
+  suggestion hook ignores prompts that are one such element.
+- `SessionEnd` fired when the `-p` session exited, with `session_id`, `cwd`, `prompt_id`, `reason` (`"other"`),
+  `scratchpad_dir` and `transcript_path`. SkillTree keeps only `session_id` and the time.
+

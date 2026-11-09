@@ -34,6 +34,11 @@ export interface MarketplaceState {
   claudeSuggestions?: boolean;
   /** "For you": catalog skills suggested from recorded use, each with its reason (empty without tracking data). */
   forYou?: { id: string; reason: string }[];
+  /**
+   * "For this project": catalog skills that name a technology the open workspace uses, each with the
+   * evidence, and a one-line summary of what was detected ("Next.js, Tailwind CSS and Playwright").
+   */
+  forProject?: { summary: string; items: { id: string; reason: string }[] };
   busyId: string | null;
 }
 

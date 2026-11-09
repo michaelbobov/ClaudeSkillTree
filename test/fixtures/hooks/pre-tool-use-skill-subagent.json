@@ -1,0 +1,14 @@
+{
+  "session_id": "a8f4b9f8-4cec-4302-b0c6-8b7c5e3c95d9",
+  "transcript_path": "/tmp/skilltree-probe/transcript.jsonl",
+  "cwd": "/tmp/skilltree-probe/project",
+  "permission_mode": "default",
+  "effort": { "level": "medium" },
+  "hook_event_name": "PreToolUse",
+  "agent_id": "a53be242a859492a6",
+  "agent_type": "general-purpose",
+  "prompt_id": "829f85e6-2da0-46bd-b959-661092fd2236",
+  "tool_name": "Skill",
+  "tool_input": { "skill": "sandbox-echo" },
+  "tool_use_id": "toolu_01"
+}

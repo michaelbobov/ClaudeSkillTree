@@ -1,7 +1,7 @@
 import { CATALOG_LIMITS } from '../../src/shared/catalog';
 import * as fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildCatalog, dedupeEntries, fetchRepositoryStats, fileKind, mergeCatalogs, filesForSkill, indexRepository, RateLimitError, replayHttpClient, searchRepositories, skillDirectories, type HttpClient } from '../../src/core/githubIndex';
+import { buildCatalog, dedupeEntries, fetchRepositoryStats, fileKind, mergeCatalogs, filesForSkill, indexRepository, RateLimitError, recategorizeCatalog, replayHttpClient, searchRepositories, skillDirectories, type HttpClient } from '../../src/core/githubIndex';
 import { validateCatalog } from '../../src/shared/catalog';
 
 const routes = JSON.parse(fs.readFileSync('test/fixtures/github/routes.json', 'utf8'));
@@ -159,5 +159,38 @@ describe('dedupeEntries: mirrors and fixtures', () => {
   it('does not treat SKILL.md files in test fixtures or node_modules as published skills', () => {
     const blob = (path: string) => ({ path, mode: '100644', type: 'blob' as const, sha: '1'.repeat(40), size: 1 });
     expect(skillDirectories([blob('skills/a/SKILL.md'), blob('tests/oracle/x/.claude/skills/b/SKILL.md'), blob('pkg/node_modules/c/SKILL.md'), blob('fixtures/d/SKILL.md'), blob('SKILL.md')])).toEqual(['', 'skills/a']);
+  });
+
+  it('does not index a SKILL.md that is a symbolic link (its blob is only the target path)', () => {
+    const item = (path: string, mode: string) => ({ path, mode, type: 'blob' as const, sha: '1'.repeat(40), size: 30 });
+    expect(skillDirectories([item('.gemini/skills/okr/SKILL.md', '120000'), item('skills/okr/SKILL.md', '100644'), item('skills/run/SKILL.md', '100755')])).toEqual(['skills/okr', 'skills/run']);
+  });
+});
+
+describe('recategorizeCatalog', () => {
+  const file = (kind: 'markdown' | 'symlink') => [{ path: 'SKILL.md', size: 30, sha: '1'.repeat(40), kind }];
+  const entry = (p: string, name: string, description: string, extra: Record<string, unknown> = {}) =>
+    ({ id: `o/r:${p}`, owner: 'o', repo: 'r', path: p, name, description, category: 'Other', categorySource: 'default', files: file('markdown'), ...extra }) as unknown as import('../../src/shared/catalog').CatalogEntry;
+
+  it('re-infers automatic categories, keeps frontmatter ones, and drops linked SKILL.md entries', () => {
+    const catalog = {
+      schemaVersion: 1,
+      generatedAt: '2026-01-01T00:00:00Z',
+      source: 'github-index',
+      repositories: ['o/r'],
+      entries: [
+        entry('finance/skills/close', 'month-end-close', 'Run the close.'),
+        entry('skills/mine', 'mine', 'Whatever.', { category: 'Design', categorySource: 'frontmatter' }),
+        entry('.gemini/skills/okr', 'okr', '../../../commands/okr.md', { files: file('symlink') }),
+      ],
+    } as unknown as import('../../src/shared/catalog').Catalog;
+    const r = recategorizeCatalog(catalog);
+    expect(r.dropped).toBe(1);
+    expect(r.moved).toBe(1);
+    expect(r.catalog.entries.map((e) => [e.name, e.category, e.categorySource])).toEqual([
+      ['month-end-close', 'Business', 'inferred'],
+      ['mine', 'Design', 'frontmatter'],
+    ]);
+    expect(r.catalog.skipped).toEqual([{ repo: 'o/r', path: '.gemini/skills/okr', reason: 'SKILL.md is a symbolic link' }]);
   });
 });

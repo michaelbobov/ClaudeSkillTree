@@ -3,7 +3,7 @@
 // SkillTree Activity Bar icon counting uses recorded since you last looked. Recorded events only.
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { CAPTURE_LABELS, type ActivityEvent } from '../shared/activity';
+import { CAPTURE_LABELS, folderName, liveSessions, multiSessionStatus, sessionWho, type ActivityEvent, type LiveSession } from '../shared/activity';
 import type { ActivityService } from '../services/activity';
 import type { SkillStore } from '../services/skillStore';
 
@@ -19,9 +19,15 @@ export function relativeTime(iso: string, now = Date.now()): string {
 }
 
 function line(e: ActivityEvent): string {
-  const how = e.source === 'UserPromptExpansion' ? 'typed' : 'by Claude';
+  const how = e.source === 'UserPromptExpansion' ? 'typed' : e.agentType ? `by a ${e.agentType} subagent` : 'by Claude';
   const project = e.projectDir ?? e.cwd;
   return `**${e.skill ?? '(unknown skill)'}** · ${how} · ${relativeTime(e.ts)}${project ? ` · ${path.basename(project)}` : ''}`;
+}
+
+function sessionLine(l: LiveSession): string {
+  const who = sessionWho(l);
+  const more = l.skills.length > 1 ? ` (+${l.skills.length - 1})` : '';
+  return `**${folderName(l.project) ?? 'unknown project'}** · ${who} · ${l.lastSkill ?? '(unknown skill)'}${more} · ${relativeTime(l.lastTs)}`;
 }
 
 export class ActivityIndicators implements vscode.Disposable {
@@ -78,9 +84,13 @@ export class ActivityIndicators implements vscode.Disposable {
       this.item.text = '$(pulse) No skill use yet';
       this.item.tooltip = 'SkillTree is recording skill use. Nothing recorded yet; new Claude Code sessions pick up the hooks. Click for the SkillTree menu.';
     } else {
-      this.item.text = `$(pulse) ${last.skill ?? 'unknown skill'} · ${relativeTime(last.ts)}`;
+      // Several Claude Code sessions (any project) using skills in the last 10 minutes: say so.
+      const live = liveSessions(s.events.slice(0, 200), Date.now(), undefined, s.ended);
+      const many = multiSessionStatus(live);
+      this.item.text = many ? `$(pulse) ${many}` : `$(pulse) ${last.skill ?? 'unknown skill'} · ${relativeTime(last.ts)}`;
+      const sessions = many ? [`**${live.length} Claude Code sessions** used skills in the last 10 minutes`, '', ...live.slice(0, 6).map((l) => `- ${sessionLine(l)}`), ''] : [];
       const md = new vscode.MarkdownString(
-        ['**Recently used skills** (recorded by SkillTree)', '', ...s.events.slice(0, 6).map((e) => `- ${line(e)}`), '', `${CAPTURE_LABELS[last.source]} · click for the SkillTree menu`].join('\n'),
+        [...sessions, '**Recently used skills** (recorded by SkillTree)', '', ...s.events.slice(0, 6).map((e) => `- ${line(e)}`), '', `${CAPTURE_LABELS[last.source]} · click for the SkillTree menu`].join('\n'),
       );
       this.item.tooltip = md;
     }

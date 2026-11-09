@@ -29,6 +29,13 @@ export interface ActivityEvent {
   hadArgs: boolean;
   /** Diagnostics when the skill name was missing: key names of tool_input (values never stored). */
   inputKeys?: string[];
+  /**
+   * Set when the skill was invoked inside a subagent or agent-team teammate: Claude Code's
+   * `agent_id` and `agent_type` (e.g. "general-purpose", "Explore"). The session id is then the
+   * parent session's. Absent for the main conversation and in logs written before this field.
+   */
+  agentId?: string | null;
+  agentType?: string | null;
 }
 
 const MAX_FIELD = 500;
@@ -50,6 +57,8 @@ export function parseHookInput(raw: unknown, env: { projectDir?: string } = {}, 
     sessionId: s(p.session_id),
     cwd: s(p.cwd),
     projectDir: env.projectDir ? env.projectDir.slice(0, MAX_FIELD) : null,
+    // Only present inside subagents; omitted otherwise to keep log lines short.
+    ...(s(p.agent_id) || s(p.agent_type) ? { agentId: s(p.agent_id), agentType: s(p.agent_type) } : {}),
   };
   if (p.hook_event_name === 'PreToolUse') {
     if (p.tool_name !== 'Skill') return null;
@@ -74,28 +83,56 @@ export function parseHookInput(raw: unknown, env: { projectDir?: string } = {}, 
   return null;
 }
 
+/** A Claude Code session ended (SessionEnd hook): only its id and the time. Not a skill use. */
+export interface SessionEndRecord {
+  v: 1;
+  kind: 'session-end';
+  ts: string;
+  sessionId: string;
+}
+
+/** Converts a SessionEnd hook payload into a record, or null for anything else. */
+export function parseSessionEnd(raw: unknown, now: () => Date = () => new Date()): SessionEndRecord | null {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null;
+  const p = raw as Record<string, unknown>;
+  const sessionId = s(p.session_id);
+  if (p.hook_event_name !== 'SessionEnd' || !sessionId) return null;
+  return { v: 1, kind: 'session-end', ts: now().toISOString(), sessionId };
+}
+
+function isSessionEnd(v: unknown): v is SessionEndRecord {
+  const e = v as Record<string, unknown>;
+  return typeof v === 'object' && v !== null && e.v === 1 && e.kind === 'session-end' && typeof e.sessionId === 'string' && typeof e.ts === 'string' && !Number.isNaN(Date.parse(e.ts));
+}
+
 export function isActivityEvent(v: unknown): v is ActivityEvent {
   if (typeof v !== 'object' || v === null) return false;
   const e = v as Record<string, unknown>;
   return e.v === 1 && typeof e.ts === 'string' && !Number.isNaN(Date.parse(e.ts)) && (e.source === 'PreToolUse:Skill' || e.source === 'UserPromptExpansion');
 }
 
-/** Parses JSONL log text, skipping malformed lines. Newest first, at most `limit` events. */
-export function parseActivityLog(text: string, limit = 2000): { events: ActivityEvent[]; skipped: number } {
+/**
+ * Parses JSONL log text, skipping malformed lines. Newest first, at most `limit` events. Session-end
+ * lines are not events: `ended` maps each ended session id to when it ended.
+ */
+export function parseActivityLog(text: string, limit = 2000): { events: ActivityEvent[]; skipped: number; ended: Record<string, string> } {
   const events: ActivityEvent[] = [];
+  const ended: Record<string, string> = {};
   let skipped = 0;
   for (const line of text.split('\n')) {
     if (!line.trim()) continue;
     try {
       const v = JSON.parse(line);
       if (isActivityEvent(v)) events.push(v);
-      else skipped++;
+      else if (isSessionEnd(v)) {
+        if (!ended[v.sessionId] || v.ts > ended[v.sessionId]) ended[v.sessionId] = v.ts;
+      } else skipped++;
     } catch {
       skipped++;
     }
   }
   events.sort((a, b) => b.ts.localeCompare(a.ts));
-  return { events: events.slice(0, limit), skipped };
+  return { events: events.slice(0, limit), skipped, ended };
 }
 
 export interface SessionGroup {
@@ -155,6 +192,10 @@ export interface SkillUsage {
   lastTs: string;
   lastSource: CaptureSource;
   lastSessionId: string | null;
+  /** Project folder (Claude Code's project dir, else the working directory) of the last use. */
+  lastProject?: string | null;
+  /** Subagent type of the last use; null when the main conversation used it. */
+  lastAgentType?: string | null;
 }
 
 export interface CoUsage {
@@ -186,7 +227,7 @@ export function summarizeUsage(events: readonly ActivityEvent[], maxPairs = 500)
     }
     if (!e.skill) continue;
     const key = e.skill.toLowerCase();
-    const u = (bySkill[key] ??= { count: 0, typed: 0, invoked: 0, sessions: 0, lastTs: e.ts, lastSource: e.source, lastSessionId: e.sessionId });
+    const u = (bySkill[key] ??= { count: 0, typed: 0, invoked: 0, sessions: 0, lastTs: e.ts, lastSource: e.source, lastSessionId: e.sessionId, lastProject: projectOf(e), lastAgentType: e.agentType ?? null });
     u.count++;
     if (e.source === 'UserPromptExpansion') u.typed++;
     else u.invoked++;
@@ -194,6 +235,8 @@ export function summarizeUsage(events: readonly ActivityEvent[], maxPairs = 500)
       u.lastTs = e.ts;
       u.lastSource = e.source;
       u.lastSessionId = e.sessionId;
+      u.lastProject = projectOf(e);
+      u.lastAgentType = e.agentType ?? null;
     }
     if (e.sessionId) {
       if (!sessionsBySkill.has(key)) sessionsBySkill.set(key, new Set());
@@ -217,6 +260,132 @@ export function summarizeUsage(events: readonly ActivityEvent[], maxPairs = 500)
   }
   const coUsage = [...pairs.values()].sort((x, y) => y.sessions - x.sessions || x.a.localeCompare(y.a) || x.b.localeCompare(y.b)).slice(0, maxPairs);
   return { totalEvents: events.length, totalSessions: skillsBySession.size, bySkill, coUsage };
+}
+
+/** The project a use belongs to: Claude Code's project dir, else the hook's working directory. */
+export function projectOf(e: Pick<ActivityEvent, 'projectDir' | 'cwd'>): string | null {
+  return e.projectDir ?? e.cwd ?? null;
+}
+
+/** Last path segment, for labels ("/a/b/my-app" → "my-app"). */
+export function folderName(dir: string | null | undefined): string | null {
+  return dir ? dir.split(/[\\/]/).filter(Boolean).pop() ?? dir : null;
+}
+
+/** Whether `dir` is one of `roots` or inside one. */
+export function isInside(dir: string | null, roots: readonly string[]): boolean {
+  if (!dir) return false;
+  const clean = (p: string) => p.replace(/[\\/]+$/, '');
+  const d = clean(dir);
+  return roots.some((r) => {
+    const root = clean(r);
+    return d === root || d.startsWith(`${root}/`) || d.startsWith(`${root}\\`);
+  });
+}
+
+/**
+ * Usage for the Skill Tree of one VS Code window.
+ * - `all`: every recorded use, except that a skill which exists only as a project skill here counts
+ *   only uses from this workspace (another project's skill with the same name is a different skill).
+ * - `here`: only uses recorded in this workspace's folders.
+ */
+export function workspaceUsage(
+  events: readonly ActivityEvent[],
+  opts: {
+    workspaceDirs: readonly string[];
+    projectOnlyKeys: ReadonlySet<string>;
+    /**
+     * Applied to both sides before comparing. The extension resolves symlinks (Claude Code reports
+     * /private/var/… where VS Code has /var/…) and ignores case where the file system does.
+     */
+    normalize?: (dir: string) => string;
+  },
+): { all: UsageSummary; here: UsageSummary } {
+  const norm = opts.normalize ?? ((d: string) => d);
+  const roots = opts.workspaceDirs.map(norm);
+  const inWorkspace = (e: ActivityEvent) => {
+    const dir = projectOf(e);
+    return isInside(dir && norm(dir), roots);
+  };
+  const here = events.filter(inWorkspace);
+  const all = events.filter((e) => !e.skill || !opts.projectOnlyKeys.has(e.skill.toLowerCase()) || inWorkspace(e));
+  return { all: summarizeUsage(all), here: summarizeUsage(here) };
+}
+
+/** A Claude Code session with recorded skill use in the last few minutes. */
+export interface LiveSession {
+  sessionId: string | null;
+  project: string | null;
+  lastTs: string;
+  lastSkill: string | null;
+  /** Subagent type of the last use; null for the main conversation. */
+  lastAgentType: string | null;
+  /** Distinct skills used in the window, newest first (as reported, lower-case). */
+  skills: string[];
+  /** Distinct subagent types seen in the window (the main conversation is not listed). */
+  agentTypes: string[];
+  /** Whether Claude, in the main conversation, invoked a skill in the window. */
+  main: boolean;
+  /** Whether the user typed a skill's slash command in the window. */
+  typed: boolean;
+  count: number;
+}
+
+/**
+ * Sessions with recorded skill use in the last `windowMs` (default 10 minutes), newest first. A
+ * session that ended (SessionEnd recorded after its last use) is left out; sessions that end without
+ * Claude Code reporting it drop out when the window passes.
+ */
+export function liveSessions(events: readonly ActivityEvent[], nowMs: number, windowMs = 10 * 60 * 1000, ended: Readonly<Record<string, string>> = {}): LiveSession[] {
+  const from = nowMs - windowMs;
+  const map = new Map<string, LiveSession>();
+  const recent = events.filter((e) => Date.parse(e.ts) >= from && Date.parse(e.ts) <= nowMs + 60_000).sort((a, b) => b.ts.localeCompare(a.ts));
+  for (const e of recent) {
+    const key = e.sessionId ?? '(unknown session)';
+    let l = map.get(key);
+    if (!l) {
+      l = { sessionId: e.sessionId, project: projectOf(e), lastTs: e.ts, lastSkill: e.skill, lastAgentType: e.agentType ?? null, skills: [], agentTypes: [], main: false, typed: false, count: 0 };
+      map.set(key, l);
+    }
+    l.count++;
+    if (!l.project) l.project = projectOf(e);
+    const name = e.skill?.toLowerCase();
+    if (name && !l.skills.includes(name)) l.skills.push(name);
+    if (e.agentType) {
+      if (!l.agentTypes.includes(e.agentType)) l.agentTypes.push(e.agentType);
+    } else if (e.source === 'UserPromptExpansion') l.typed = true;
+    else l.main = true;
+  }
+  return [...map.values()].filter((l) => !(l.sessionId && ended[l.sessionId] && ended[l.sessionId] >= l.lastTs)).sort((a, b) => b.lastTs.localeCompare(a.lastTs));
+}
+
+/**
+ * Status bar text when several sessions are using skills at once ("3 sessions · pdf, animate"),
+ * or null for zero or one session (the newest use is shown instead).
+ */
+export function multiSessionStatus(live: readonly LiveSession[]): string | null {
+  if (live.length < 2) return null;
+  const skills = live.map((l) => l.lastSkill).filter((x): x is string => !!x);
+  const shown = [...new Set(skills)].slice(0, 2);
+  return `${live.length} sessions${shown.length ? ` · ${shown.join(', ')}` : ''}`;
+}
+
+/**
+ * Who used skills in a live session, short: "Claude", "typed", "typed + Claude", "Explore subagent",
+ * "Claude + 1 subagent", "2 subagents". A typed slash command is the user's choice, not Claude's.
+ */
+export function sessionWho(l: Pick<LiveSession, 'main' | 'typed' | 'agentTypes'>): string {
+  const n = l.agentTypes.length;
+  const parts = [l.typed ? 'typed' : '', l.main ? 'Claude' : ''].filter(Boolean);
+  if (n === 0) return parts.join(' + ') || 'Claude';
+  const subs = n === 1 ? `${l.agentTypes[0]} subagent` : `${n} subagents`;
+  return parts.length ? `${parts.join(' + ')} + ${n} subagent${n === 1 ? '' : 's'}` : subs;
+}
+
+/** "Claude", "Claude (Explore subagent)", or "a subagent" when only the id is known. */
+export function whoLabel(agentType: string | null | undefined, source: CaptureSource): string {
+  if (source === 'UserPromptExpansion') return 'you (typed)';
+  return agentType ? `Claude (${agentType} subagent)` : 'Claude';
 }
 
 /**

@@ -49,6 +49,8 @@ export interface PersistedUiState {
   selectedId: string | null;
   /** Within-category order: name, or by recorded use. */
   order?: 'name' | 'recent' | 'most';
+  /** Recorded use from every project, or only this workspace's folders. */
+  usageScope?: 'all' | 'here';
 }
 
 const graph = channel<WebviewToHost, HostToWebview>();

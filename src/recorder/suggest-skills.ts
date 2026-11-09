@@ -9,7 +9,7 @@ import * as crypto from 'node:crypto';
 import * as path from 'node:path';
 import { validateCatalog } from '../shared/catalog';
 import { HEARTBEAT_STALE_MS, bridgePaths, parseHeartbeat } from '../shared/bridge';
-import { suggestForPrompt, suggestionContext } from '../mcp/suggest';
+import { isGeneratedPrompt, suggestForPrompt, suggestionContext } from '../mcp/suggest';
 
 const MAX_INPUT = 1024 * 1024;
 const MAX_SESSIONS = 50;
@@ -28,6 +28,7 @@ function main(): void {
   const payload = JSON.parse(fs.readFileSync(0, 'utf8').slice(0, MAX_INPUT)) as Record<string, unknown>;
   const prompt = typeof payload.prompt === 'string' ? payload.prompt : '';
   if (!prompt.trim() || prompt.trimStart().startsWith('/')) return; // slash commands already name what to run
+  if (isGeneratedPrompt(prompt)) return; // a subagent reporting back, not something the user asked
   const cwd = typeof payload.cwd === 'string' && path.isAbsolute(payload.cwd) ? payload.cwd : null;
   const session = typeof payload.session_id === 'string' ? payload.session_id.slice(0, 100) : '';
 

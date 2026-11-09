@@ -65,6 +65,7 @@ suite('SkillTree activity tracking', () => {
     assert.equal(json.hooks.PreToolUse[1].hooks[0].async, undefined, 'runs in the foreground so short sessions cannot drop the event');
     assert.ok(json.hooks.PreToolUse[1].hooks[0].timeout <= 10, 'short timeout');
     assert.ok(Array.isArray(json.hooks.UserPromptExpansion));
+    assert.equal(json.hooks.SessionEnd?.[0]?.hooks?.[0]?.args?.[0], json.hooks.PreToolUse[1].hooks[0].args[0], 'SessionEnd runs the same recorder (ended sessions leave Live)');
     assert.ok((await fs.readdir(path.dirname(sandboxSettings()))).some((n) => n.startsWith('settings.json.skilltree-backup-')), 'backup written');
     assert.equal(api.activity().enabled, true);
 
@@ -123,5 +124,33 @@ suite('SkillTree activity tracking', () => {
     const off = api.test!.indicators();
     assert.match(off.statusText ?? '', /^\$\(type-hierarchy\) \d+ skills?$/, 'with tracking off the status bar shows the skill count, no usage');
     assert.equal(off.badge, 0, 'no badge when tracking is off');
+  });
+
+  test('labels a subagent\'s skill use and shows several live sessions', async () => {
+    api.test!.setTrackingConsent(async () => 'user');
+    const enabled = await vscode.commands.executeCommand<{ status: string; message: string }>('skilltree.enableTracking');
+    assert.equal(enabled.status, 'enabled', enabled.message);
+    const settings = JSON.parse(await fs.readFile(sandboxSettings(), 'utf8'));
+    const handler = (settings.hooks.PreToolUse as { hooks: { command: string; args: string[] }[] }[]).find((g) => g.hooks.some((h) => h.args?.[0]?.endsWith('record-skill-event.mjs')))!.hooks[0];
+    const workspace = vscode.workspace.workspaceFolders![0].uri.fsPath;
+    const send = (payload: unknown) =>
+      spawnSync(handler.command, handler.args, { input: JSON.stringify(payload), encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: workspace } });
+    const read = (f: string) => JSON.parse(require('node:fs').readFileSync(path.join(fixtures, f), 'utf8'));
+    // A subagent in one session (payload shape from a real run) and the main conversation of another.
+    for (const r of [send(read('pre-tool-use-skill-subagent.json')), send({ ...read('pre-tool-use-skill.json'), session_id: 'it-second-session' })]) assert.equal(r.status, 0, r.stderr);
+
+    await api.refreshActivity();
+    const sub = api.activity().events.find((e) => e.agentType === 'general-purpose');
+    assert.ok(sub, 'the subagent event is recorded with its agent type');
+    assert.equal(sub!.agentId, 'a53be242a859492a6');
+
+    const tree = api.test!.graphState().activity!;
+    assert.ok(tree.here, 'the Skill Tree also gets this workspace\'s own counts');
+    assert.ok((tree.recent ?? []).some((e) => e.agentType === 'general-purpose'), 'recent events for the Live strip include the subagent use');
+    assert.ok(api.test!.recentActivityItems().some((r) => r.description.startsWith('Claude (general-purpose subagent)')), 'the sidebar row names the subagent');
+    assert.match(api.test!.indicators().statusText ?? '', /^\$\(pulse\) \d+ sessions · /, 'the status bar says several sessions are using skills');
+
+    const disabled = await vscode.commands.executeCommand<{ status: string }>('skilltree.disableTracking');
+    assert.equal(disabled.status, 'disabled');
   });
 });

@@ -9,6 +9,8 @@ import { Inspector, type BodyState } from './components/Inspector';
 import { EmptyState, LoadingState, NoMatches } from './components/EmptyState';
 import { StatusBar } from './components/StatusBar';
 import { PageNav } from './components/PageNav';
+import { LiveStrip, sessionKey } from './components/LiveStrip';
+import { liveSessions } from '@shared/activity';
 
 const SOURCES: SkillSource[] = ['project', 'nested', 'personal', 'synced', 'managed'];
 const NARROW_WIDTH = 760;
@@ -22,6 +24,13 @@ export function App() {
   const [bodies, setBodies] = useState<Record<string, BodyState>>({});
   const [narrow, setNarrow] = useState(() => window.innerWidth < NARROW_WIDTH);
   const graphRef = useRef<GraphHandle>(null);
+  // Clock for the Live strip: sessions drop off 10 minutes after their last recorded use.
+  const [now, setNow] = useState(() => Date.now());
+  const [liveFocus, setLiveFocus] = useState<string | null>(null);
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 20_000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => saveUiState(ui), [ui]);
 
@@ -30,6 +39,7 @@ export function App() {
       switch (msg.type) {
         case 'state':
           setState(msg.state);
+          setNow(Date.now());
           // Invalidate cached bodies for skills whose file changed.
           setBodies((prev) => {
             const next: Record<string, BodyState> = {};
@@ -83,7 +93,13 @@ export function App() {
   const filtered = useMemo(() => filterSkills(skills, filter), [skills, filter]);
   const selected = useMemo(() => skills.find((s) => s.id === ui.selectedId) ?? null, [skills, ui.selectedId]);
   const isFiltered = ui.query.trim() !== '' || ui.source !== 'all' || ui.category !== 'all';
-  const activity = state?.activity;
+  const allActivity = state?.activity;
+  const scope = ui.usageScope === 'here' && allActivity?.here ? 'here' : 'all';
+  // "This project": the same summary limited to this workspace's folders. Live sessions stay global.
+  const activity = useMemo(() => (allActivity && scope === 'here' && allActivity.here ? { ...allActivity, ...allActivity.here } : allActivity), [allActivity, scope]);
+  const live = useMemo(() => (allActivity?.recent ? liveSessions(allActivity.recent, now, undefined, allActivity.ended) : []), [allActivity, now]);
+  const focusSession = live.find((l) => sessionKey(l) === liveFocus) ?? null;
+  const sessionKeys = useMemo(() => (focusSession ? new Set(focusSession.skills) : null), [focusSession]);
   const hasUsage = !!activity && Object.keys(activity.bySkill).length > 0;
   const order: SkillOrder = hasUsage && ORDERS.includes(ui.order as SkillOrder) ? (ui.order as SkillOrder) : 'name';
   const coUsed = useMemo(() => (selected ? coUsedSkills(selected, filtered, activity) : []), [selected, filtered, activity]);
@@ -129,7 +145,7 @@ export function App() {
   } else if (filtered.length === 0) {
     main = <NoMatches onClear={clearFilters} />;
   } else if (ui.view === 'list') {
-    main = <ListView skills={filtered} selectedId={ui.selectedId} onSelect={select} onOpen={openSkill} activity={activity} order={order} />;
+    main = <ListView skills={filtered} selectedId={ui.selectedId} onSelect={select} onOpen={openSkill} activity={activity} order={order} sessionKeys={sessionKeys} />;
   } else {
     main = (
       <GraphView
@@ -146,6 +162,7 @@ export function App() {
         layoutKey={`${ui.query}|${ui.source}|${ui.category}|${order}`}
         activity={activity}
         order={order}
+        sessionKeys={sessionKeys}
       />
     );
   }
@@ -180,6 +197,7 @@ export function App() {
         scanning={state?.status === 'loading'}
         disabled={!hasContent}
       />
+      {hasContent && live.length > 0 && <LiveStrip sessions={live} focus={focusSession ? liveFocus : null} onFocus={setLiveFocus} now={now} />}
       <div className="workspace">
         <main className="canvas" aria-label="Skill Tree">
           {main}
@@ -198,7 +216,18 @@ export function App() {
           />
         )}
       </div>
-      {state && <StatusBar state={state} shown={filtered.length} filtered={isFiltered} view={ui.view} showActivityLegend={ui.view === 'graph' && coUsed.length > 0} />}
+      {state && (
+        <StatusBar
+          state={state}
+          activity={activity}
+          scope={allActivity?.here ? scope : null}
+          onScope={(usageScope) => setUi((u) => ({ ...u, usageScope }))}
+          shown={filtered.length}
+          filtered={isFiltered}
+          view={ui.view}
+          showActivityLegend={ui.view === 'graph' && coUsed.length > 0}
+        />
+      )}
     </div>
   );
 }

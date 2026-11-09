@@ -1,3 +1,4 @@
+import { folderName } from '@shared/activity';
 import type { Category, OrganizedSkill, SkillIssue } from '@shared/types';
 import type { SkillUsage } from '@shared/activity';
 import { SOURCE_LABELS } from '@shared/types';
@@ -93,5 +94,7 @@ export function usageTitle(u: SkillUsage): string {
   const parts = [`${u.count} recorded use${u.count === 1 ? '' : 's'}`];
   if (u.invoked) parts.push(`${u.invoked} by Claude`);
   if (u.typed) parts.push(`${u.typed} typed`);
-  return `${parts.join(' · ')}\nLast: ${longDate(u.lastTs)}\nRecorded by SkillTree's opt-in hooks.`;
+  const where = u.lastProject ? ` in ${folderName(u.lastProject)}` : '';
+  const who = u.lastSource === 'UserPromptExpansion' ? ', typed' : u.lastAgentType ? `, by a ${u.lastAgentType} subagent` : ', by Claude';
+  return `${parts.join(' · ')}\nLast: ${longDate(u.lastTs)}${where}${who}\nRecorded by SkillTree's opt-in hooks.`;
 }

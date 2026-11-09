@@ -1,7 +1,7 @@
 // "Recent activity" sidebar section: only events actually recorded by SkillTree's hooks.
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { CAPTURE_LABELS, type ActivityEvent } from '../shared/activity';
+import { CAPTURE_LABELS, type ActivityEvent, folderName, projectOf } from '../shared/activity';
 import type { ActivityService } from '../services/activity';
 
 function ago(iso: string): string {
@@ -23,9 +23,12 @@ export class ActivityTreeProvider implements vscode.TreeDataProvider<ActivityEve
 
   getTreeItem(e: ActivityEvent): vscode.TreeItem {
     const item = new vscode.TreeItem(e.skill ?? '(unknown skill)', vscode.TreeItemCollapsibleState.None);
-    item.description = `${e.source === 'UserPromptExpansion' ? 'typed' : 'Claude'} · ${ago(e.ts)}`;
+    // With several agents at work, who and where matter: "Claude (Explore subagent) · my-app · 2m ago".
+    const who = e.source === 'UserPromptExpansion' ? 'typed' : e.agentType ? `Claude (${e.agentType} subagent)` : 'Claude';
+    const project = folderName(projectOf(e));
+    item.description = `${who}${project ? ` · ${project}` : ''} · ${ago(e.ts)}`;
     item.iconPath = new vscode.ThemeIcon(e.source === 'UserPromptExpansion' ? 'terminal' : 'symbol-event');
-    item.tooltip = `${CAPTURE_LABELS[e.source]}\n${new Date(e.ts).toLocaleString()}\nSession ${e.sessionId ?? 'unknown'}\n${e.projectDir ?? e.cwd ?? ''}`;
+    item.tooltip = `${CAPTURE_LABELS[e.source]}${e.agentType ? ` inside a ${e.agentType} subagent` : ''}\n${new Date(e.ts).toLocaleString()}\nSession ${e.sessionId ?? 'unknown'}\n${e.projectDir ?? e.cwd ?? ''}`;
     item.command = { command: 'skilltree.openActivity', title: 'Open Activity' };
     return item;
   }

@@ -98,7 +98,9 @@ const NOT_PUBLISHED = /(^|\/)(tests?|__tests__|fixtures?|node_modules)\//i;
 
 export function skillDirectories(tree: TreeItem[]): string[] {
   return tree
-    .filter((t) => t.type === 'blob' && (t.path === 'SKILL.md' || t.path.endsWith('/SKILL.md')) && !NOT_PUBLISHED.test(t.path))
+    // A SKILL.md that is a symbolic link is not indexed: its blob is the link's target path, not
+    // instructions, and the installer never writes links.
+    .filter((t) => t.type === 'blob' && t.mode !== '120000' && (t.path === 'SKILL.md' || t.path.endsWith('/SKILL.md')) && !NOT_PUBLISHED.test(t.path))
     .map((t) => (t.path === 'SKILL.md' ? '' : t.path.slice(0, -'/SKILL.md'.length)))
     .sort();
 }
@@ -221,7 +223,7 @@ export async function indexRepository(fullName: string, http: HttpClient, opts: 
     const warnings = warningsFor(files, fm, parsed.declaresHooks, parseErrors);
     if (pluginMarker) warnings.unshift(`Plugin component (${pluginMarker}); plugin installation is not supported yet.`);
     if (info.data.archived) warnings.push('Repository is archived.');
-    const category = parsed.frontmatterCategory ?? inferCategory(parsed.name, parsed.description);
+    const category = parsed.frontmatterCategory ?? inferCategory(parsed.name, parsed.description, { path: dir, repository: `${owner}/${repo}` });
     entries.push({
       id,
       name: parsed.name.slice(0, 200),
@@ -461,4 +463,31 @@ export function mergeCatalogs(base: Catalog, addition: Catalog): Catalog {
     skipped: [...(base.skipped ?? []).filter((s) => keep(s.repo)), ...(addition.skipped ?? []), ...deduped.skipped],
     repositoryStats: { ...base.repositoryStats, ...addition.repositoryStats },
   };
+}
+
+/**
+ * Applies the current indexing rules to an existing catalog without fetching anything: entries whose
+ * SKILL.md is a symbolic link are moved to `skipped`, and automatic categories are inferred again
+ * (a category from the skill's own frontmatter is kept). Used after the rules change.
+ */
+export function recategorizeCatalog(catalog: Catalog): { catalog: Catalog; dropped: number; moved: number } {
+  const skipped = [...(catalog.skipped ?? [])];
+  const entries: CatalogEntry[] = [];
+  let moved = 0;
+  for (const e of catalog.entries) {
+    const skillMd = e.files.find((f) => f.path === 'SKILL.md');
+    if (skillMd?.kind === 'symlink') {
+      skipped.push({ repo: `${e.owner}/${e.repo}`, path: e.path, reason: 'SKILL.md is a symbolic link' });
+      continue;
+    }
+    if (e.categorySource === 'frontmatter') {
+      entries.push(e);
+      continue;
+    }
+    const category = inferCategory(e.name, e.description, { path: e.path, repository: `${e.owner}/${e.repo}` });
+    if (category !== e.category) moved++;
+    entries.push({ ...e, category, categorySource: category === 'Other' ? 'default' : 'inferred' });
+  }
+  const repositories = catalog.repositories.filter((r) => entries.some((e) => `${e.owner}/${e.repo}`.toLowerCase() === r.toLowerCase()));
+  return { catalog: { ...catalog, repositories, entries, skipped }, dropped: catalog.entries.length - entries.length, moved };
 }

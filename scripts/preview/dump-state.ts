@@ -4,12 +4,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { scanAll, standardRoots } from '../../src/core/scanner';
 import { organizeSkills } from '../../src/core/organize';
-import { matchOrigins, recommendFromUsage } from '../../src/shared/recommend';
+import { availableFor, matchOrigins, recommendFromUsage } from '../../src/shared/recommend';
+import { profileProject, profileSummary, recommendForProject } from '../../src/shared/projectFit';
+import { scanProject } from '../../src/core/projectScan';
 import { splitFrontmatter } from '../../src/core/frontmatter';
 import { githubRawProvider, gitBlobSha } from '../../src/core/installer';
 import { installStateFor, validateCatalog } from '../../src/shared/catalog';
 import type { MarketplaceState } from '../../src/shared/marketplace';
-import { groupBySession, parseActivityLog, parseHookInput, summarizeUsage, type ActivityEvent, type ActivityViewState } from '../../src/shared/activity';
+import { groupBySession, parseActivityLog, parseHookInput, summarizeUsage, workspaceUsage, type ActivityEvent, type ActivityViewState } from '../../src/shared/activity';
 
 async function main() {
   const [homeDir, workspaceDir, outFile] = process.argv.slice(2);
@@ -97,7 +99,45 @@ async function main() {
       return parseHookInput(payload, { projectDir: '/Users/dev/Projects/example' }, at(new Date(Date.now() - minsAgo * 60000).toISOString()));
     })
     .filter((e): e is ActivityEvent => !!e);
-  const usageFixture = { enabled: true, since: new Date(Date.now() - 12 * 86400000).toISOString(), ...summarizeUsage(usageEvents) };
+  let usageFixture = { enabled: true, since: new Date(Date.now() - 12 * 86400000).toISOString(), ...summarizeUsage(usageEvents) };
+  // QA-only "several agents at once": three sessions in different projects active in the last
+  // minutes, one skill used inside a subagent (payload shape from a real run). Never shipped.
+  const livePlan: [string, string, string, number, string | null][] = [
+    ['frontend-design', 'qa-live-1', '/Users/dev/Projects/example', 6, null],
+    ['emil-design-eng', 'qa-live-1', '/Users/dev/Projects/example', 2, 'general-purpose'],
+    ['pdf', 'qa-live-2', '/Users/dev/Projects/api-server', 4, null],
+    ['docx', 'qa-live-2', '/Users/dev/Projects/api-server', 1, null],
+    ['web-typography', 'qa-live-3', '/Users/dev/Projects/docs-site', 3, 'Explore'],
+  ];
+  const liveEvents = livePlan
+    .filter(([name]) => byName.has(name))
+    .map(([name, session, project, minsAgo, agentType]) => {
+      const skill = byName.get(name)!;
+      const base = agentType ? { ...fx('pre-tool-use-skill-subagent'), agent_type: agentType, agent_id: `qa-${agentType}` } : fx('pre-tool-use-skill');
+      return parseHookInput({ ...base, session_id: session, cwd: project, tool_input: { skill: skill.command.slice(1) } }, { projectDir: project }, at(new Date(Date.now() - minsAgo * 60000).toISOString()));
+    })
+    .filter((e): e is ActivityEvent => !!e)
+    .sort((a, b) => b.ts.localeCompare(a.ts));
+  const liveAll = [...liveEvents, ...usageEvents];
+  const liveSplit = workspaceUsage(liveAll, { workspaceDirs: ['/Users/dev/Projects/example'], projectOnlyKeys: new Set() });
+  let liveFixture: Record<string, unknown> = { enabled: true, since: new Date(Date.now() - 12 * 86400000).toISOString(), ...liveSplit.all, here: liveSplit.here, recent: liveEvents };
+  // SKILLTREE_LIVE_LOG: draw the Live strip from a REAL recorded log (e.g. a snapshot taken while sessions ran).
+  if (process.env.SKILLTREE_LIVE_LOG) {
+    const real = parseActivityLog(fs.readFileSync(process.env.SKILLTREE_LIVE_LOG, 'utf8'));
+    const split = workspaceUsage(real.events, { workspaceDirs: folders.map((f) => f.path), projectOnlyKeys: new Set() });
+    const first = real.events.map((e) => e.ts).sort()[0] ?? new Date().toISOString();
+    liveFixture = { enabled: true, since: new Date(Date.parse(first) - 60_000).toISOString(), ...split.all, here: split.here, recent: real.events, ended: real.ended };
+    console.log(`live: ${real.events.length} real events, ${Object.keys(real.ended).length} ended sessions from ${process.env.SKILLTREE_LIVE_LOG}`);
+  }
+  // SKILLTREE_USAGE_LOG: use a REAL recorded activity log instead of the QA fixture (marketing shots).
+  const realUsageLog = process.env.SKILLTREE_USAGE_LOG;
+  let realUsage: ActivityEvent[] | null = null;
+  if (realUsageLog) {
+    realUsage = parseActivityLog(fs.readFileSync(realUsageLog, 'utf8')).events;
+    const first = realUsage.map((e) => e.ts).sort()[0];
+    usageFixture = { enabled: true, since: new Date(Date.parse(first) - 60_000).toISOString(), ...summarizeUsage(realUsage) };
+    console.log(`usage: ${realUsage.length} real events from ${realUsageLog}`);
+  }
   // QA-only "For you": the real recommender on the real catalog and local skills, with the fixture usage above.
   const locals = skills.map((s) => {
     let skillMdSha: string | undefined;
@@ -109,8 +149,15 @@ async function main() {
     return { id: s.id, name: s.name, command: s.command, dirName: s.dirName, category: s.category, installedFromId: s.installedFrom?.id, skillMdSha };
   });
   const marketForYou = v.ok ? recommendFromUsage(v.catalog, locals, usageFixture, matchOrigins(v.catalog, locals)) : [];
+  // "For this project": the real scanner and matcher on a real folder (this repository unless SKILLTREE_PROJECT_DIR is set).
+  const projectDir = process.env.SKILLTREE_PROJECT_DIR ?? process.cwd();
+  const profile = profileProject(await scanProject(projectDir));
+  const projectItems = v.ok ? recommendForProject(v.catalog, profile, availableFor(locals, matchOrigins(v.catalog, locals))).map(({ id, reason }) => ({ id, reason })) : [];
+  const marketForProject = projectItems.length ? { summary: profileSummary(profile), items: projectItems } : undefined;
+  console.log(`for this project (${path.basename(projectDir)}): ${profileSummary(profile) || '(nothing detected)'} → ${projectItems.map((r) => r.id).join(', ') || '(none)'}`);
   const usageSelect = byName.get("frontend-design")?.id ?? null;
-  fs.writeFileSync(outFile, JSON.stringify({ state, bodies, market, previews, previewId: previewEntry?.id ?? null, activityReal, activityFixture, usageFixture, usageSelect, marketForYou }));
+  const activityShown = realUsage ? { ...activityFixture, settingsFile: 'project/.claude/settings.json', logFile: '~/.claude/skilltree/activity.jsonl', installedAt: usageFixture.since, sessions: groupBySession(realUsage), total: realUsage.length } : activityFixture;
+  fs.writeFileSync(outFile, JSON.stringify({ state, bodies, market, previews, previewId: previewEntry?.id ?? null, activityReal, activityFixture: activityShown, usageFixture, liveFixture, usageSelect, marketForYou, marketForProject }));
   console.log(`for you (fixture usage): ${marketForYou.map((r) => `${r.id} — ${r.reason}`).join(' | ') || '(none)'}`);
   console.log(`state: ${skills.length} skills from ${result.roots.filter((r) => r.exists).length} existing locations; catalog: ${market.entries.length} entries`);
 }

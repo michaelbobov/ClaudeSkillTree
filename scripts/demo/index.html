@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkillTree demo</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #1e1e1e; overflow: hidden; }
+  .frame { position: absolute; left: 0; top: 0; width: 100%; height: calc(100% - 30px); border: 0; display: block; }
+  .frame[hidden] { display: none; }
+  .now { position: absolute; left: 0; right: 0; bottom: 0; height: 30px; padding: 0 12px; display: flex; align-items: center; background: #252526; color: #cccccc; font: 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .now.is-note { color: #ffffff; background: #2a4fae; }
+</style>
+</head>
+<body>
+<iframe class="frame" id="f-tree" title="Skill Tree" data-src="app.html#graph"></iframe>
+<iframe class="frame" id="f-marketplace" title="Marketplace" data-src="app.html#marketplace" hidden></iframe>
+<iframe class="frame" id="f-activity" title="Activity" data-src="app.html#activity" hidden></iframe>
+<div class="now" id="now" aria-live="polite">Starting the replay…</div>
+<script src="demo-data.js"></script>
+<script src="shell.js"></script>
+</body>
+</html>

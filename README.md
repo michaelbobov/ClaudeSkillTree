@@ -32,7 +32,7 @@ Open SkillTree from its VS Code Activity Bar icon. A compact sidebar lists insta
 The full tree is a pan-and-zoom node graph with these concepts:
 
 - Root: active workspace/project (with an option to view global skills).
-- Categories: Design, Frontend, Backend, Testing, Debugging, Automation, Documentation, Other.
+- Categories: Design, Frontend, Backend, Data, Security, Testing, Debugging, Automation, Agents, Documentation, Business, Other.
 - Skill nodes: installed skills with name, short description, scope (project/global), source, and last-used indicator.
 - Edges: organizational connections **chosen by the user** or suggestions. They are not proof of usage.
 - Node click: detail drawer with skill Markdown preview, source URL, folder location, open-file action, usage history, and uninstall (where permitted).
@@ -71,6 +71,7 @@ Use Claude Code's current documented hook events, with user opt-in:
 
 - `PreToolUse` matcher for `Skill` to observe Claude-initiated skill tool calls.
 - `UserPromptExpansion` to observe directly typed `/skill-name` invocations that bypass `PreToolUse`.
+- `SessionEnd` (added 2026-11-08) so sessions that ended leave the Skill Tree's Live strip; it records only the session id and time.
 - Other events only if helpful and documented at implementation time.
 
 A usage record should include a timestamp, skill ID/name, project/workspace, session ID, invocation source, and optional verified context. **Do not store full prompt contents by default.** Treat attribution to file edits or commits as a separate, optional phase with confidence labels; never claim a commit was "created by" a skill based merely on timing.
@@ -233,7 +234,7 @@ Structure is a proposal; prioritize functional integration over rigid folder nam
 
 ### Phase 4 — Discovery, recommendations and navigation (done)
 
-- [x] Catalog grows on its own: seed repositories plus GitHub topic searches for popular (by stars) and new (created in the last 30 days) repositories; identical copies and per-agent mirrors are de-duplicated. *(1,230 skills from 20 repositories in the bundled snapshot.)*
+- [x] Catalog grows on its own: seed repositories plus GitHub topic searches for popular (by stars) and new (created in the last 30 days) repositories; identical copies and per-agent mirrors are de-duplicated. *(1,163 skills from 20 repositories in the bundled snapshot.)*
 - [x] Real repository stars from the GitHub API, labeled as whole-repository stars with a date; sort by stars.
 - [x] Large skills install (up to 2,000 files / 50 MB) with a "Large skill" warning and parallel, hash-checked downloads. *(taste-skill: 1,631 files in 36 s.)*
 - [x] Usage visible without opening anything: status bar item (skill count, or the last recorded skill) and an Activity Bar badge; counts, last use, "Last used / Most used" sorting and dashed same-session edges in the Skill Tree.
@@ -246,7 +247,10 @@ Use the opt-in usage data SkillTree records, and make organizing many skills eas
 
 - [x] **Unused skills:** after at least 7 days of tracking, installed skills with no recorded use are marked "unused" in the Skill Tree and list when sorting by use, counted in the Skill Tree status bar, and explained in the details panel with a Reveal link to remove the folder yourself (SkillTree never deletes skills). *(A "keep, don't flag again" choice is not built yet.)*
 - [x] **For you:** the Marketplace suggests catalog skills from what you actually use: other skills from the repositories your used skills come from (favouring the categories you use from them), then the best-starred skills in the category you use most. Every suggestion shows its reason; installs still go through the confirmation dialog. Local skills are tied to catalog entries by SkillTree's install record, an identical SKILL.md, or a name only one catalog skill has.
-- [ ] **Better automatic categories:** fewer skills in "Other" (about half of the catalog today), using the skill's repository and folder as well as its name and description; still labeled "auto" until you choose.
+- [x] **For this project:** the Marketplace suggests catalog skills that name a technology the open folder uses, with no tracking needed. SkillTree lists file names (bounded walk, dependency/build/hidden folders skipped, no symlinks) and reads dependency manifests (`package.json`, `requirements*.txt`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `Gemfile`, `composer.json`, `pubspec.yaml`); nothing is sent anywhere. Each card says why, e.g. "About Next.js and React (package.json: next, react)". Languages count only in a skill's name, and one passing mention in a description is not enough. Setting: `skilltree.projectSuggestions`.
+- [ ] **Ask Claude to pick:** send the project profile (technology names only) and a shortlist to `claude -p` on request, so Claude ranks the fit of generic skills too (only 160 of 1,163 catalog skills name a technology).
+- [x] **Better automatic categories:** four categories the catalog needed (Data, Security, Agents, Business), and catalog skills are also judged by the folders they sit in and their repository (name 3, folders 2, description 1, repository 1; folders that only hold skills, such as `.agents/skills`, don't count). In the bundled catalog "Other" went from 591 of 1,230 skills to 119 of 1,163. Still labeled "auto" until you choose. While checking, 67 entries turned out to be SKILL.md symbolic links (their text was only a path); the indexer now skips them and the installer says why it refuses one. `npm run index -- --live --recategorize` re-applies the rules to the existing catalog offline.
+- [x] **Several agents at once:** sessions, projects and subagents are recorded and shown (Live strip in the Skill Tree, labels in tooltips, details, sidebar and Activity, "N sessions" in the status bar), with a This project / All projects switch for the counts. The suggestion hook now ignores prompts Claude Code generates itself (a background subagent reporting back arrives as one `<task-notification>` element).
 - [ ] **Your own groups:** collections you name yourself (for example "client work" or "writing"), alongside the built-in categories, stored outside SKILL.md.
 - [ ] **Organize in bulk:** select several skills in the Skill Tree or list view and move them to a category or group at once; drag a skill onto another category in the graph.
 - [ ] **Add any GitHub repository:** "Add from GitHub…" in the Marketplace indexes a repository on demand (no backend; three GitHub API calls) and lists its skills.
@@ -309,10 +313,12 @@ Both run `npm run build` first. In the host window click the **SkillTree** icon 
 
 ### What Phase 3 does (opt-in activity)
 
-- **SkillTree: Enable Activity Tracking…** explains exactly what is recorded and asks you to choose user settings (`~/.claude/settings.json`) or this project (`.claude/settings.local.json`). It backs up the file, then adds two background (`async`) hooks: `PreToolUse` with matcher `Skill` and `UserPromptExpansion` (typed `/commands`). Semantics are documented in [`docs/HOOKS_NOTES.md`](docs/HOOKS_NOTES.md).
+- **SkillTree: Enable Activity Tracking…** explains exactly what is recorded and asks you to choose user settings (`~/.claude/settings.json`) or this project (`.claude/settings.local.json`). It backs up the file, then adds three short foreground hooks (5 s timeout; the recorder takes about 15 ms): `PreToolUse` with matcher `Skill`, `UserPromptExpansion` (typed `/commands`) and `SessionEnd`. Installs from before `SessionEnd` was added keep working; turn tracking off and on to add it. Semantics are documented in [`docs/HOOKS_NOTES.md`](docs/HOOKS_NOTES.md).
 - The hook runs a dependency-free recorder (`~/.claude/skilltree/record-skill-event.mjs`) that appends **time, skill name, capture source, session id and working directory** to `~/.claude/skilltree/activity.jsonl`, prints nothing and always exits 0. Prompt text, arguments and transcripts are never stored.
-- **Disable** restores the original settings file byte-for-byte if nothing else changed it, otherwise removes only SkillTree's two handlers. The log stays until you delete it from the Activity tab.
+- **Disable** restores the original settings file byte-for-byte if nothing else changed it, otherwise removes only SkillTree's handlers. The log stays until you delete it from the Activity tab.
 - **Activity tab** and **Recent Activity** sidebar: events grouped by session and project, labeled "Claude invoked (Skill tool)" or "Typed /command", with unknown fields shown as unknown. The Skill Tree inspector shows the last observed use. Listing an event is not a claim that the skill caused any change.
+- **Several agents at once:** each recorded use keeps its session, its project folder and, when a subagent or agent-team teammate invoked the skill, Claude Code's `agent_type` and `agent_id` (the session id is then the parent's; checked against a real run). The Skill Tree's **Live** strip lists every session that used a skill in the last 10 minutes and has not ended (SessionEnd), in any project ("api-server · Claude · docx · 1m", "docs-site · Explore subagent · web-typography · 3m"); choosing one picks out its skills on the tree. Usage tooltips and the details panel name the project and agent of the last use, the sidebar rows read "Claude (Explore subagent) · my-app · 2m ago", and the status bar says "3 sessions · pdf, animate" when several are at work. SkillTree knows when a skill was invoked, where and by which agent, not what it is doing: that would mean reading prompts, which it never stores.
+- **This project / All projects** (Skill Tree status bar): count use from every project, or only this workspace. A skill that exists here only as a project skill always counts only this workspace's uses, since another project's skill with the same name is a different skill.
 
 Before publishing publicly, create a VS Code Marketplace publisher ID and set `publisher` in `package.json` (currently the placeholder `skilltree-local`), add a `repository` URL and a license. Publishing and obtaining credentials require the developer's own account/approval.
 

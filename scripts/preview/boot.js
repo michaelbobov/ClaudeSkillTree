@@ -1,6 +1,6 @@
 // Preview harness bootstrap: stands in for the VS Code webview host.
 // Scenario options come from the URL query: theme=dark|light|hc, view=graph|list, sel=<id> (saved
-// selection), select=<id> (host "select" message), q=<query>, empty=1, usage=1 (QA usage fixture), order=name|recent|most.
+// selection), select=<id> (host "select" message), q=<query>, empty=1, usage=1 (QA usage fixture), live=1 (QA: several sessions active now, one subagent), order=name|recent|most.
 // Later phases: add handlers to HANDLERS for new message types (catalog, install, activity…), and
 // put their data in window.__DATA__ (written by preview.mjs).
 (function () {
@@ -20,7 +20,9 @@
   document.getElementById('root').dataset.page = page;
   const MARKET_HANDLERS = {
     ready() {
-      reply({ type: 'state', state: params.get('foryou') ? { ...d.market, forYou: d.marketForYou } : d.market });
+      let state = params.get('foryou') ? { ...d.market, forYou: d.marketForYou } : d.market;
+      if (params.get('project')) state = { ...state, forProject: d.marketForProject };
+      reply({ type: 'state', state });
     },
     preview(m) {
       const text = d.previews[m.id];
@@ -29,7 +31,7 @@
   };
   const GRAPH_HANDLERS = {
     ready() {
-      reply({ type: 'state', state: params.get('usage') ? { ...d.state, activity: d.usageFixture } : d.state });
+      reply({ type: 'state', state: params.get('live') ? { ...d.state, activity: d.liveFixture } : params.get('usage') ? { ...d.state, activity: d.usageFixture } : d.state });
       if (params.get('select')) setTimeout(() => reply({ type: 'select', id: params.get('select') }), 100);
     },
     getSkillBody(m) {

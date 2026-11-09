@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { CATEGORIES, type ActivitySummaryState, type Category, type OrganizedSkill } from '@shared/types';
-import { usageFor } from '@shared/activity';
+import { usageFor, folderName } from '@shared/activity';
 import { unusedDays } from '@shared/recommend';
 import { post } from '../vscodeBridge';
 import { renderMarkdown } from '../markdown';
@@ -179,7 +179,8 @@ export function Inspector({ skill, allSkills, body, narrow, onClose, onSelect, a
                 </span>
               </div>
               <div className="insp-note">
-                Last {longDate(usage.lastTs)} · {usage.lastSource === 'UserPromptExpansion' ? 'typed as a /command' : 'invoked by Claude'}
+                Last {longDate(usage.lastTs)} · {usage.lastSource === 'UserPromptExpansion' ? 'typed as a /command' : usage.lastAgentType ? `invoked by a ${usage.lastAgentType} subagent` : 'invoked by Claude'}
+                {usage.lastProject && <> · in <span title={usage.lastProject}>{folderName(usage.lastProject)}</span></>}
               </div>
               {coUsed.length > 0 && (
                 <div className="insp-related">

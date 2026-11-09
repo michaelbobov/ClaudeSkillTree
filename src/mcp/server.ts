@@ -8,7 +8,7 @@ import * as path from 'node:path';
 import * as readline from 'node:readline';
 import { SERVER_INSTRUCTIONS, TOOLS, installSkill, searchSkills, type ToolContext } from './tools';
 
-const VERSION = '0.1.0';
+const VERSION = '0.1.1';
 const SUPPORTED = ['2025-06-18', '2025-03-26', '2024-11-05'];
 
 type Req = { jsonrpc: '2.0'; id?: number | string | null; method: string; params?: Record<string, unknown> };

@@ -50,8 +50,8 @@ export function ActivityApp() {
       <div className="state-panel state-empty" role="status">
         <p className="state-title">Activity tracking is off</p>
         <p className="state-sub">
-          When you opt in, SkillTree adds two Claude Code hooks (PreToolUse for the Skill tool and UserPromptExpansion for typed /commands) that append the time, skill name,
-          capture source, session id and working directory to a local file. Prompt text and arguments are never recorded, nothing leaves your machine, and disabling
+          When you opt in, SkillTree adds three Claude Code hooks (PreToolUse for the Skill tool, UserPromptExpansion for typed /commands, and SessionEnd) that append the
+          time, skill name, capture source, session id, working directory and, for subagents, the subagent type to a local file. Prompt text and arguments are never recorded, nothing leaves your machine, and disabling
           restores your settings.
         </p>
         <div className="state-actions">
@@ -101,6 +101,11 @@ export function ActivityApp() {
                   <span className="tl-skill">{e.skill ?? <em>unknown skill</em>}</span>
                   <span className={`tl-source is-${e.source === 'UserPromptExpansion' ? 'typed' : 'tool'}`} title={e.source}>
                     <i className={`codicon codicon-${e.source === 'UserPromptExpansion' ? 'terminal' : 'symbol-event'}`} aria-hidden /> <span className="tl-source-label">{CAPTURE_LABELS[e.source]}</span>
+                    {e.agentType && (
+                      <span className="tl-agent" title={`Invoked inside a subagent (agent_type ${e.agentType}${e.agentId ? `, agent_id ${e.agentId}` : ''})`}>
+                        · {e.agentType} subagent
+                      </span>
+                    )}
                   </span>
                   <span className="tl-cwd mono" title={e.projectDir ?? e.cwd ?? ''}>
                     {e.cwd ?? e.projectDir ?? ''}

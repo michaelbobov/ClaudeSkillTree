@@ -2,7 +2,7 @@
   "name": "skilltree",
   "displayName": "SkillTree",
   "description": "See, organize and open your Claude Code skills as a compact, IDE-native graph.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "skilltree-local",
   "license": "UNLICENSED",
   "private": true,
@@ -308,6 +308,11 @@
           "type": "boolean",
           "default": true,
           "description": "Show SkillTree in the status bar: your skill count, or the last skill Claude Code used while usage tracking is on. Click it for the SkillTree menu."
+        },
+        "skilltree.projectSuggestions": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Suggest catalog skills that fit the open folder (Marketplace → *For this project*). SkillTree lists file names and reads dependency manifests such as `package.json` on this machine; nothing is sent anywhere and nothing in the folder is changed."
         }
       }
     },
@@ -391,6 +396,7 @@
     "verify": "node scripts/verify.mjs",
     "verify:quick": "node scripts/verify.mjs --quick",
     "preview": "node scripts/preview/preview.mjs",
+    "demo": "node scripts/demo/build-demo.mjs",
     "index": "node scripts/run-ts.mjs scripts/index-skills.ts",
     "index:live": "node scripts/run-ts.mjs scripts/index-skills.ts --live",
     "e2e:live": "node scripts/run-ts.mjs scripts/e2e-live.ts",

@@ -13,11 +13,34 @@ import { ActivityService, type ActivityState, type TrackingConsent } from './ser
 import { ActivityTreeProvider } from './views/activityTreeProvider';
 import { ActivityIndicators } from './views/activityIndicators';
 import { ClaudeBridge } from './services/claudeBridge';
-import { matchOrigins, recommendFromUsage, type Recommendation } from './shared/recommend';
+import { availableFor, matchOrigins, recommendFromUsage, type Recommendation } from './shared/recommend';
+import { profileProject, profileSummary, recommendForProject, type ProjectFacts, type ProjectProfile } from './shared/projectFit';
+import { scanProject } from './core/projectScan';
 import { gitBlobSha } from './core/installer';
 import * as fs from 'node:fs';
 import type { CliRunner } from './services/claudeCli';
 import { ACTIVITY_VIEW_TYPE, ActivityPanel } from './views/activityPanel';
+import { usageKeys } from './shared/activity';
+import type { OrganizedSkill } from './shared/types';
+
+/** How far back the Skill Tree's Live strip looks (it shows sessions active in the last 10 minutes). */
+const RECENT_MS = 15 * 60 * 1000;
+
+function workspaceDirs(): string[] {
+  return (vscode.workspace.workspaceFolders ?? []).filter((f) => f.uri.scheme === 'file').map((f) => f.uri.fsPath);
+}
+
+/**
+ * Names that, on this machine, belong only to a project skill of this workspace. Uses of such a name
+ * in other projects are another project's skill and are not counted here. A personal, synced or
+ * managed skill with the same name takes precedence in Claude Code, so it is counted everywhere.
+ */
+function projectOnlyKeys(skills: readonly OrganizedSkill[]): Set<string> {
+  const project = new Set<string>();
+  const elsewhere = new Set<string>();
+  for (const s of skills) for (const k of usageKeys(s)) (s.source === 'project' || s.source === 'nested' ? project : elsewhere).add(k);
+  return new Set([...project].filter((k) => !elsewhere.has(k)));
+}
 
 /** Test-only hooks, available only when VS Code runs the extension in test mode. */
 export interface SkillTreeTestHooks {
@@ -108,9 +131,71 @@ export function activate(context: vscode.ExtensionContext): SkillTreeApi {
   };
   market.recommendations = () => forYou;
   context.subscriptions.push(store.onDidChange(refreshForYou), activity.onDidChange(refreshForYou), market.onDidChange(refreshForYou));
+
+  // "For this project": skills that name a technology the open folder uses. The folder is scanned
+  // (file names + dependency manifests, read-only) on start, when folders change and when a manifest
+  // changes; matching is re-run when skills or the catalog change.
+  let profile: ProjectProfile = { techs: [] };
+  let forProject: MarketplaceState['forProject'];
+  const projectEnabled = () => vscode.workspace.getConfiguration('skilltree').get<boolean>('projectSuggestions', true);
+  const refreshForProject = () => {
+    const catalog = market.currentCatalog;
+    let next: MarketplaceState['forProject'];
+    if (catalog && projectEnabled() && profile.techs.length) {
+      const locals = store.snapshot.skills.map((s) => ({ id: s.id, name: s.name, command: s.command, dirName: s.dirName, category: s.category, installedFromId: s.installedFrom?.id, skillMdSha: skillMdSha(s.file, s.modifiedAt) }));
+      const items = recommendForProject(catalog, profile, availableFor(locals, matchOrigins(catalog, locals))).map(({ id, reason }) => ({ id, reason }));
+      if (items.length) next = { summary: profileSummary(profile), items };
+    }
+    if (JSON.stringify(next) !== JSON.stringify(forProject)) {
+      forProject = next;
+      market.notify();
+    }
+  };
+  let scanSeq = 0;
+  const rescanProject = async () => {
+    const seq = ++scanSeq;
+    const roots = workspaceDirs();
+    let facts: ProjectFacts = { files: [], deps: [] };
+    if (projectEnabled()) {
+      for (const root of roots) {
+        const f = await scanProject(root);
+        // In a multi-root workspace, keep evidence readable by naming the folder.
+        const prefix = roots.length > 1 ? `${root.split(/[\\/]/).pop()}/` : '';
+        facts = { files: [...facts.files, ...f.files.map((p) => prefix + p)], deps: [...facts.deps, ...f.deps.map((d) => ({ ...d, manifest: prefix + d.manifest }))] };
+      }
+    }
+    if (seq !== scanSeq) return; // a newer scan started
+    profile = profileProject(facts);
+    log.appendLine(`[project] ${profile.techs.length ? profile.techs.map((t) => `${t.label} (${t.evidence})`).join(', ') : 'no known technologies detected'}`);
+    refreshForProject();
+  };
+  let rescanTimer: NodeJS.Timeout | undefined;
+  const scheduleRescan = () => {
+    clearTimeout(rescanTimer);
+    rescanTimer = setTimeout(() => void rescanProject(), 1500);
+  };
+  const manifestWatcher = vscode.workspace.createFileSystemWatcher('**/{package.json,requirements*.txt,pyproject.toml,Pipfile,Cargo.toml,go.mod,Gemfile,composer.json,pubspec.yaml}');
+  market.projectRecommendations = () => forProject;
+  context.subscriptions.push(
+    manifestWatcher,
+    manifestWatcher.onDidCreate(scheduleRescan),
+    manifestWatcher.onDidChange(scheduleRescan),
+    manifestWatcher.onDidDelete(scheduleRescan),
+    vscode.workspace.onDidChangeWorkspaceFolders(scheduleRescan),
+    vscode.workspace.onDidChangeConfiguration((e) => e.affectsConfiguration('skilltree.projectSuggestions') && scheduleRescan()),
+    store.onDidChange(refreshForProject),
+    market.onDidChange(refreshForProject),
+    { dispose: () => clearTimeout(rescanTimer) },
+  );
+  void rescanProject();
   SkillGraphPanel.activity = () => {
     const s = activity.snapshot;
-    return s.enabled || s.events.length ? { enabled: s.enabled, since: s.installedAt, ...activity.usage() } : undefined;
+    if (!s.enabled && !s.events.length) return undefined;
+    const usage = activity.workspaceUsage(workspaceDirs(), projectOnlyKeys(store.snapshot.skills));
+    const from = Date.now() - RECENT_MS;
+    const recent = s.events.filter((e) => Date.parse(e.ts) >= from).slice(0, 200);
+    const ended = Object.fromEntries(Object.entries(s.ended).filter(([, ts]) => Date.parse(ts) >= from));
+    return { enabled: s.enabled, since: s.installedAt, ...usage.all, ...(usage.here ? { here: usage.here } : {}), recent, ended };
   };
   activity.onDidChange(() => SkillGraphPanel.refresh());
   const tree = new SkillsTreeProvider(store);

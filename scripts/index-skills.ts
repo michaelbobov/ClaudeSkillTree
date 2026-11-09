@@ -4,10 +4,11 @@
 // Options: --out <file>  --seed <file>  --search  --max-search <n> (total repos added by search)  --sample <n> (also write data/catalog.sample.json)
 //          --refresh-stats   only refresh repository star counts in the existing catalog (one request per repository)
 //          --add o/r,o2/r2   index these repositories and merge them into the existing catalog
+//          --recategorize    offline: re-apply category rules and drop linked SKILL.md entries in the existing catalog
 // Never executes downloaded content: it only reads metadata and SKILL.md text.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { buildCatalog, fetchHttpClient, fetchRepositoryStats, mergeCatalogs, RateLimitError, replayHttpClient, type SeedConfig } from '../src/core/githubIndex';
+import { buildCatalog, fetchHttpClient, fetchRepositoryStats, mergeCatalogs, RateLimitError, recategorizeCatalog, replayHttpClient, type SeedConfig } from '../src/core/githubIndex';
 import { validateCatalog, type Catalog } from '../src/shared/catalog';
 
 function arg(name: string): string | undefined {
@@ -26,6 +27,22 @@ async function main() {
     ? fetchHttpClient(process.env.GITHUB_TOKEN)
     : replayHttpClient(JSON.parse(fs.readFileSync(path.resolve(root, 'test/fixtures/github/routes.json'), 'utf8')));
   const fixedNow = live ? undefined : () => new Date('2026-01-01T00:00:00Z');
+
+  if (process.argv.includes('--recategorize')) {
+    const current = JSON.parse(fs.readFileSync(path.resolve(root, out), 'utf8')) as Catalog;
+    const r = recategorizeCatalog(current);
+    const v = validateCatalog(r.catalog);
+    if (!v.ok) {
+      console.log(`INDEX FAIL catalog invalid after recategorizing:\n  ${v.errors.join('\n  ')}`);
+      process.exit(1);
+    }
+    fs.writeFileSync(path.resolve(root, out), JSON.stringify(r.catalog, null, 2) + '\n');
+    const counts: Record<string, number> = {};
+    for (const e of r.catalog.entries) counts[e.category] = (counts[e.category] ?? 0) + 1;
+    console.log(`RECATEGORIZE OK ${r.catalog.entries.length} entries (${r.dropped} dropped, ${r.moved} moved) → ${out}`);
+    console.log(`  ${Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c} ${n}`).join(' · ')}`);
+    return;
+  }
 
   if (process.argv.includes('--refresh-stats')) {
     const current = JSON.parse(fs.readFileSync(path.resolve(root, out), 'utf8')) as Catalog;
