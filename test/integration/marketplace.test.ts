@@ -17,6 +17,8 @@ suite('SkillTree marketplace', () => {
     ext = vscode.extensions.getExtension<SkillTreeApi>(EXTENSION_ID)!;
     api = await ext.activate();
     assert.ok(api.test, 'test hooks are available in test mode');
+    // The default catalog URL is the hosted daily catalog; these tests stay offline and deterministic.
+    await vscode.workspace.getConfiguration('skilltree').update('catalogUrl', '', vscode.ConfigurationTarget.Global);
   });
 
   suiteTeardown(async () => {
@@ -104,6 +106,6 @@ suite('SkillTree marketplace', () => {
     assert.equal(state.fetchedAt, '2026-01-02T03:04:05.000Z');
     assert.match(state.error ?? '', /127\.0\.0\.1/);
     assert.equal(state.entries.length, bundled.entries.length);
-    await vscode.workspace.getConfiguration('skilltree').update('catalogUrl', undefined, vscode.ConfigurationTarget.Global);
+    await vscode.workspace.getConfiguration('skilltree').update('catalogUrl', '', vscode.ConfigurationTarget.Global);
   });
 });

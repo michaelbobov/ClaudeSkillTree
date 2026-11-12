@@ -37,8 +37,9 @@ Graph edges show organization only, not dependencies or usage.
 commit. Preview the complete `SKILL.md` and file list, then install to the project (`.claude/skills/`) or
 globally (`~/.claude/skills/`) after confirming. Downloads are verified against the pinned commit, nothing
 is overwritten without a second confirmation, and failures roll back. Indexed skills are not reviewed for
-security, quality or licensing. Set `skilltree.catalogUrl` to use a hosted catalog; otherwise the bundled
-snapshot is used and works offline.
+security, quality or licensing. The catalog is rebuilt daily from GitHub and cached for offline use; when
+it cannot be reached, the snapshot bundled with the extension is shown. Set `skilltree.catalogUrl` to an
+empty string to use only the bundled snapshot.
 
 ## Activity (opt-in)
 

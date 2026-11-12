@@ -137,20 +137,33 @@ export class MarketplaceService implements vscode.Disposable {
     this.emitter.fire(this.state);
   }
 
+  private refreshSeq = 0;
+
   async refresh(): Promise<MarketplaceState> {
+    // Only the newest refresh may set the catalog: a slow download started earlier (at startup, or
+    // before the URL changed again) must not replace a result that a later refresh already loaded.
+    const seq = ++this.refreshSeq;
     this.loading = true;
     this.publish();
     try {
+      let next: CatalogLoadResult;
       if (this.testCatalog) {
-        this.loaded = { catalog: this.testCatalog, origin: 'bundled', fetchedAt: null, url: null };
+        next = { catalog: this.testCatalog, origin: 'bundled', fetchedAt: null, url: null };
       } else {
         const url = vscode.workspace.getConfiguration('skilltree').get<string>('catalogUrl', '');
-        this.loaded = await loadCatalog({ url, cacheFile: this.cacheFile, bundledFiles: this.bundledFiles, timeoutMs: 10000 });
+        next = await loadCatalog({ url, cacheFile: this.cacheFile, bundledFiles: this.bundledFiles, timeoutMs: 10000 });
       }
-      this.log.info(`Catalog: ${this.loaded.origin}, ${this.loaded.catalog?.entries.length ?? 0} entries${this.loaded.error ? ` (${this.loaded.error})` : ''}`);
+      if (seq !== this.refreshSeq) {
+        this.log.info(`Catalog: dropped an older ${next.origin} result (a newer refresh started)`);
+        return this.state;
+      }
+      this.loaded = next;
+      this.log.info(`Catalog: ${next.origin}, ${next.catalog?.entries.length ?? 0} entries${next.error ? ` (${next.error})` : ''}`);
     } finally {
-      this.loading = false;
-      this.publish();
+      if (seq === this.refreshSeq) {
+        this.loading = false;
+        this.publish();
+      }
     }
     return this.state;
   }

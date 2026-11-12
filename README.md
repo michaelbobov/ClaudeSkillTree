@@ -1,6 +1,6 @@
 # SkillTree — Visual Skill Manager for Claude Code
 
-> **Project status:** Phases 1–3 (local skill tree, marketplace with safe install, opt-in activity tracking) are implemented; see [Development](#development). The hosted catalog goes live once the repository is pushed and GitHub Pages is enabled. Phase 4 items are still requirements, not claims that they are implemented.
+> **Project status:** Phases 1–3 (local skill tree, marketplace with safe install, opt-in activity tracking) are implemented; see [Development](#development). The hosted catalog is live at https://michaelbobov.github.io/ClaudeSkillTree/catalog-v1.json (rebuilt daily) and is the extension's default since 0.1.2. Phase 4 items are still requirements, not claims that they are implemented.
 
 SkillTree is a **VS Code extension**, not a web app, that makes Claude Code skills easier to discover, organize, install, and understand. Think of a skill tree from a game, but for AI-assisted development: see skills you have, how they relate to your workflow, which ones Claude has invoked, and what work was happening when they were used.
 
@@ -215,7 +215,7 @@ Structure is a proposal; prioritize functional integration over rigid folder nam
 ### Phase 2 — Functional marketplace and install flow
 
 - [x] Build a small sample catalog to make UI/test development deterministic.
-- [x] Add GitHub indexing script + scheduled Actions workflow + hosted catalog JSON. *(The workflow publishes `catalog-v1.json` to GitHub Pages; hosting activates when the repository is pushed. Until then the extension uses the bundled snapshot.)*
+- [x] Add GitHub indexing script + scheduled Actions workflow + hosted catalog JSON. *(The workflow publishes `catalog-v1.json` to GitHub Pages daily; live since 2026-11-10.)*
 - [x] Marketplace supports search/categories/details, reliable fetch/cache/offline state.
 - [x] Preview a real GitHub skill; install with user confirmation to project/global scope.
 - [x] Handle collision/update cases and unsafe paths; test installation into temporary directories.
@@ -255,7 +255,7 @@ Use the opt-in usage data SkillTree records, and make organizing many skills eas
 - [ ] **Organize in bulk:** select several skills in the Skill Tree or list view and move them to a category or group at once; drag a skill onto another category in the graph.
 - [ ] **Add any GitHub repository:** "Add from GitHub…" in the Marketplace indexes a repository on demand (no backend; three GitHub API calls) and lists its skills.
 - [ ] **This-session installs:** install a skill only for the current Claude Code session and remove it when the session ends.
-- [ ] **Hosted catalog live:** push the repository and enable GitHub Pages so the daily index reaches everyone (needs the repository owner).
+- [x] **Hosted catalog live:** the repository is public, GitHub Pages publishes the daily index, and since 0.1.2 `skilltree.catalogUrl` defaults to it (empty string = bundled snapshot only). 2026-11-12 index: 3,028 skills from 72 repositories, 1.35 MB gzipped.
 
 ### Phase 6 — Later (optional)
 

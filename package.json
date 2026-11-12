@@ -2,7 +2,7 @@
   "name": "skilltree",
   "displayName": "SkillTree",
   "description": "See, organize and open your Claude Code skills as a compact, IDE-native graph.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "skilltree-local",
   "license": "UNLICENSED",
   "private": true,
@@ -300,8 +300,8 @@
       "properties": {
         "skilltree.catalogUrl": {
           "type": "string",
-          "default": "",
-          "markdownDescription": "HTTPS URL of a SkillTree `catalog.json` (for example the GitHub Pages output of `.github/workflows/index-skills.yml`). Leave empty to use the catalog snapshot bundled with the extension. The last good copy is cached for offline use.",
+          "default": "https://michaelbobov.github.io/ClaudeSkillTree/catalog-v1.json",
+          "markdownDescription": "HTTPS URL of the SkillTree catalog the Marketplace lists. The default is the catalog rebuilt daily from public GitHub repositories by `.github/workflows/index-skills.yml`. The last good copy is cached for offline use; when neither is available, the snapshot bundled with the extension is shown. Set it to an empty string to use only the bundled snapshot (no network).",
           "scope": "application"
         },
         "skilltree.statusBar": {
